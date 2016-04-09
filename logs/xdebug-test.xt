@@ -1,0 +1,6 @@
+TRACE START [2016-04-08 00:27:14]
+    0.0365     248096     -> APIResponse() /var/www/barkeep.beefyhost.com/application.php:78
+    0.0366     248280       -> header() /var/www/barkeep.beefyhost.com/application/FUNCTIONS.php:29
+    0.0370       9208
+TRACE END   [2016-04-08 00:27:14]
+

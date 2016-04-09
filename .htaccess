@@ -1,0 +1,5 @@
+RewriteEngine On
+#Just pass the whole damn thing to the application.  All url routing is handled in control.php
+RewriteCond %{REQUEST_FILENAME} !-f
+#RewriteRule (.*) application.php?baseURL=$1 [L,QSA]
+RewriteRule (.*) application.php?baseURL=$1 [L,QSA,B]
