@@ -1,17 +1,13 @@
 <?php
 
-$postString = file_get_contents("php://input");
-if ($postString) $_POST = json_decode($postString, true);
-
 include_once('application/CLASSES.php');
 include_once('application/config.php');
 
-$Start = microtime(true);
-
 $url = getParam('baseURL');
-$perfLog = "\r\n" . date("Y-m-d H:i:s") . " - $url\r\n";
 
-$pathComponents = explode('/', $url); //Reversed because array_pop() is faster than array_shift()  Not that it matters significantly on arrays with <10 items.
+$PerfLog = new PerfLog($url);
+
+$pathComponents = explode('/', $url);
 $Path = array();
 
 foreach ($pathComponents as $pathItem) {
@@ -44,22 +40,28 @@ switch ($requestProtocol) {
 			case "rest":
 				switch ($requestVersion) {
 					case "v1":
+                        $headers = getallheaders();
+                        if($headers && isset($headers['Content-Type'])) {
+                            switch(strtolower($headers['Content-Type'])) {
+                                case 'application/json':
+                                    if ($postString = file_get_contents("php://input")) $_POST = json_decode($postString, true);
+                                    break;
+
+                                default:
+                                    break;
+                            }
+                        }
+
 						session_name(SESSION_NAME);
 						session_start();
-
-						$SessionLoadTime = microtime(true) - $Start;
 
 						if (!isset($_SESSION['session'])) $_SESSION['session'] = new Session(new MySQLDatabase('DBCredentials'));
 
 						$Session =& $_SESSION['session'];
 
-						$perfLog .= "Session ID:            " . session_id() . "\r\n";
-						$perfLog .= "Session IP Address:    " . $_SERVER['REMOTE_ADDR'] . "\r\n";
-						$perfLog .= "Session started in     " . number_format(microtime(true) - $Start, 4) . " seconds.\r\n";
+						$Session->Process($_SERVER, $Path, $PerfLog);
 
-						$processStart = microtime(true);
-
-						$Session->Process($_SERVER, $Path);
+                        session_write_close();
 						break;
 
 					default:
@@ -78,9 +80,3 @@ switch ($requestProtocol) {
 		APIResponse(RESPONSE_400);
 		break;
 }
-
-
-$perfLog .= "Command processed in   " . number_format(microtime(true) - $processStart, 4) . " seconds.\r\n";
-$perfLog .= "Completed in           " . number_format(microtime(true) - $Start, 4) . " seconds.\r\n";
-
-singleLog($perfLog, 'logs/PerfLog.txt');

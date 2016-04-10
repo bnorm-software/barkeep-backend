@@ -1,6 +1,10 @@
 <?php
 
 /*
+ * Jer's yet undetermined license goes here
+ */
+
+/*
 	//Example connection array:
 	$dbCreds = array(
 		'host'=>'localhost',

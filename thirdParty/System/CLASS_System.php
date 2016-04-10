@@ -1,5 +1,9 @@
 <?php
 
+/*
+ * Jer's yet undetermined license goes here
+ */
+
 class Vector2 {
 	public $X = false;
 	public $Y = false;

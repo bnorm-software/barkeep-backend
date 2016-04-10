@@ -1,5 +1,9 @@
 <?php
 
+/*
+ * Jer's yet undetermined license goes here
+ */
+
 class SQLInsertBuilder { //This provides a streamlined method of inserting large volumes of data, and tracking its insert ids.
 	private $statement = '';
 	private $table;

@@ -20,7 +20,15 @@ class Session {
         $this->DB = $db;
     }
 
-    public function Process($server, $path) {
+    public function Process($server, $path, $perfLog = false) {
+        if($perfLog) {
+            $log = "Session Started\r\n";
+            $log .= "ID:            " . session_id() . "\r\n";
+            $log .= "IP Address:    " . $_SERVER['REMOTE_ADDR'] . "\r\n";
+            singleLog($log);
+            $perfLog->Log($log);
+        }
+
         $headers = getallheaders();
         //singleLog(array("SERVER"=>$server, "HEADERS"=>$headers, "POST"=>$_POST));
         $method = (isset($server['REQUEST_METHOD'])) ? $server['REQUEST_METHOD'] : false;
