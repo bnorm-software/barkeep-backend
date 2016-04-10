@@ -77,8 +77,7 @@ function getFileSize($sizeInBytes, $round = 2) //Converts a given number of byte
 	return $result;
 }
 
-function getParam($paramName, $array = false) //EVEN MOAR NEW AND IMPROOVD!
-{
+function getParam($paramName, $array = false) { //EVEN MOAR NEW AND IMPROOVD!
 	if($array === false) {
 		if(isset($_POST[$paramName])) return $_POST[$paramName];
 		else if(isset($_GET[$paramName])) return $_GET[$paramName];

@@ -2,16 +2,10 @@
 
 include_once('application/common.php');
 include_once('application/FUNCTIONS.php');
-include_once('application/System/CLASS_System.php');
+include_once('thirdParty/System/CLASS_System.php');
 
 function __autoload($className) {
 	switch ($className) {
-		case 'MySQLDatabase':
-			include_once('thirdParty/System/CLASS_MySQLDatabase.php');
-			break;
-		case 'SQLInsertBuilder':
-			include_once('thirdParty/System/CLASS_SQLSystem.php');
-			break;
 		case 'Session':
 			include_once('application/CLASS_Session.php');
 			break;
@@ -21,6 +15,12 @@ function __autoload($className) {
 		case 'SqlFormatter':
 			include_once('thirdParty/SqlFormatter.php');
 			break;
+        case 'MySQLDatabase':
+            include_once('thirdParty/System/CLASS_MySQLDatabase.php');
+            break;
+        case 'SQLInsertBuilder':
+            include_once('thirdParty/System/CLASS_SQLSystem.php');
+            break;
 		case 'PerfLog':
 			include_once('thirdParty/System/CLASS_PerfLog.php');
 			break;

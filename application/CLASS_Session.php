@@ -25,12 +25,10 @@ class Session {
             $log = "Session Started\r\n";
             $log .= "ID:            " . session_id() . "\r\n";
             $log .= "IP Address:    " . $_SERVER['REMOTE_ADDR'] . "\r\n";
-            singleLog($log);
             $perfLog->Log($log);
         }
 
         $headers = getallheaders();
-        //singleLog(array("SERVER"=>$server, "HEADERS"=>$headers, "POST"=>$_POST));
         $method = (isset($server['REQUEST_METHOD'])) ? $server['REQUEST_METHOD'] : false;
         if($this->LoggedIn()) {
             if (!empty($path)) {
@@ -93,8 +91,8 @@ class Session {
                 }
             } else {
 				switch($method) {
-					case GET:
-					case PUT:
+					case "GET":
+					case "PUT":
 						$handler = $method;
 						if(method_exists($this, $handler)) $this->$handler();
 						else APIResponse(RESPONSE_404, "Could not find session handler $handler.");
@@ -115,7 +113,6 @@ class Session {
                             $login = $this->DB->GetRow("SELECT * FROM tblUsers WHERE username=$username AND password=$password;");
                             if($login && (int)$login['id']) {
                                 $this->auth = sha1(uniqid('randomsalt', true));
-                                //header("Authorization: $this->auth");
                                 $this->ID = (int)$login['id'];
                                 $this->Username = $login['username'];
                                 $this->DisplayName = $login['displayName'];
