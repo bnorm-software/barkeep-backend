@@ -22,7 +22,7 @@ function __autoload($className) {
 			include_once('thirdParty/SqlFormatter.php');
 			break;
 		case 'PerfLog':
-			include_once('thirdParty/CLASS_PerfLog.php');
+			include_once('thirdParty/System/CLASS_PerfLog.php');
 			break;
 		default:
 			$grenade = new Exception('Could not locate class: '.$className);
