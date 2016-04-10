@@ -22,8 +22,8 @@ class Vector2 {
 	}
 
 	public function Distance($source = false) {
-		if(gettype($source) != 'object' || get_class($source) != 'Vector2') $source = new Vector2(0, 0);
-		if($this->IsFloat() && $source->IsFloat()) {
+		if (gettype($source) != 'object' || get_class($source) != 'Vector2') $source = new Vector2(0, 0);
+		if ($this->IsFloat() && $source->IsFloat()) {
 			$x = $source->X - $this->X;
 			$y = $source->Y - $this->Y;
 			$distance = sqrt(($x ^ 2) + ($y ^ 2));
@@ -32,10 +32,9 @@ class Vector2 {
 	}
 
 	public function Normalize() {
-		if($this->IsFloat()) {
+		if ($this->IsFloat()) {
 			$distance = $this->Distance();
 			return new Vector2($this->X / $distance, $this->Y / $distance);
-		}
-		else return false;
+		} else return false;
 	}
 }

@@ -11,7 +11,7 @@ function microtime_float() {
 
 function maxLength($string, $length) //Returns a string truncated to a given length
 {
-	return (strlen($string) > $length - 3) ? substr($string, 0, $length - 3).'...' : $string;
+	return (strlen($string) > $length - 3) ? substr($string, 0, $length - 3) . '...' : $string;
 }
 
 function mathMin($input, $min) //Returns the greater of two numbers
@@ -25,7 +25,7 @@ function mathMax($input, $max) //Returns the lesser of two numbers
 }
 
 function mathClamp($input, $min, $max) {
-	if($min < $max) return mathMax(mathMin($input, $min), $max);
+	if ($min < $max) return mathMax(mathMin($input, $min), $max);
 	else return false;
 }
 
@@ -41,20 +41,20 @@ function timeOut($time_start, $round = 2) //Returns the time passed in microseco
 }
 
 function stringClamp($string, $length) {
-	return (strlen($string) > $length) ? substr($string, 0, $length - 2).'...' : $string;
+	return (strlen($string) > $length) ? substr($string, 0, $length - 2) . '...' : $string;
 }
 
 function getFileSize($sizeInBytes, $round = 2) //Converts a given number of bytes into an easily identifiable string
 {
 	$counter = 0;
-	while($sizeInBytes >= 1024) {
+	while ($sizeInBytes >= 1024) {
 		$sizeInBytes /= 1024;
 		$counter++;
 	}
 
 	$result = round($sizeInBytes, $round);
 
-	switch($counter) {
+	switch ($counter) {
 		case 0:
 			$result .= 'B';
 			break;
@@ -78,31 +78,31 @@ function getFileSize($sizeInBytes, $round = 2) //Converts a given number of byte
 }
 
 function getParam($paramName, $array = false) { //EVEN MOAR NEW AND IMPROOVD!
-	if($array === false) {
-		if(isset($_POST[$paramName])) return $_POST[$paramName];
-		else if(isset($_GET[$paramName])) return $_GET[$paramName];
-	} else if(is_array($array)) return (array_key_exists($paramName, $array)) ? $array[$paramName] : false;
+	if ($array === false) {
+		if (isset($_POST[$paramName])) return $_POST[$paramName];
+		else if (isset($_GET[$paramName])) return $_GET[$paramName];
+	} else if (is_array($array)) return (array_key_exists($paramName, $array)) ? $array[$paramName] : false;
 	else return false;
 }
 
 function getIP($ip = false) {
-	if(!$ip) $ip = explode(':', $_SERVER['REMOTE_ADDR']);
+	if (!$ip) $ip = explode(':', $_SERVER['REMOTE_ADDR']);
 	else $ip = explode(':', $ip);
 	return $ip[0];
 }
 
-if(!function_exists('xmlentities')) {
+if (!function_exists('xmlentities')) {
 	function xmlentities($string) {
 		$not_in_list = "A-Z0-9a-z\s_-";
 		return preg_replace_callback("/[^{$not_in_list}]/", 'get_xml_entity_at_index_0', $string);
 	}
 
 	function get_xml_entity_at_index_0($CHAR) {
-		if(!is_string($CHAR[0]) || (strlen($CHAR[0]) > 1)) {
+		if (!is_string($CHAR[0]) || (strlen($CHAR[0]) > 1)) {
 			die("function: 'get_xml_entity_at_index_0' requires data type: 'char' (single character). '{$CHAR[0]}' does not match this type.");
 		}
 
-		switch($CHAR[0]) {
+		switch ($CHAR[0]) {
 			case "'":
 			case '"':
 			case '&':
@@ -118,30 +118,30 @@ if(!function_exists('xmlentities')) {
 	}
 
 	function numeric_entity_4_char($char) {
-		return "&#".str_pad(ord($char), 3, '0', STR_PAD_LEFT).";";
+		return "&#" . str_pad(ord($char), 3, '0', STR_PAD_LEFT) . ";";
 	}
 }
 
 function buildJSONResponse($array) {
-	foreach($array as $key=>$item) {
-		if(gettype($item) == 'string') $array[$key] = utf8_encode($item);
+	foreach ($array as $key => $item) {
+		if (gettype($item) == 'string') $array[$key] = utf8_encode($item);
 	}
 	header('Content-type: application/json; charset=utf-8');
 	echo json_encode($array);
 }
 
 function invertArray($array) {
-	if(is_array($array)) {
+	if (is_array($array)) {
 		$result = array();
-		foreach($array as $id => $item) $result[$item] = $id;
+		foreach ($array as $id => $item) $result[$item] = $id;
 		return $result;
 	} else return false;
 }
 
 function percent($total, $dividend, $round = 2, $padRound = true) {
-	if($total != 0) {
+	if ($total != 0) {
 		$result = round($dividend / $total * 100, $round);
-		if($padRound) $result = number_format($result, $round, '.', '');
+		if ($padRound) $result = number_format($result, $round, '.', '');
 		return $result;
 	} else return false; //You are not Chuck Norris.
 }
@@ -160,28 +160,28 @@ function keyHasValue($key, $array) {
 
 function getArrayKeys(&$array) //Returns an array[] of the array keys passed
 {
-	if(is_array($array) && count($array) > 0) {
+	if (is_array($array) && count($array) > 0) {
 		$result = array();
-		foreach($array as $key => $disposable) $result[] = $key;
+		foreach ($array as $key => $disposable) $result[] = $key;
 		return $result;
 	} else return false;
 }
 
 function prePrint($item, $asString = false) //Handy debugging function
 {
-	if($asString) {
-		return "<pre>".print_r($item, true)."</pre>";
+	if ($asString) {
+		return "<pre>" . print_r($item, true) . "</pre>";
 	} else {
-		echo "<pre>".print_r($item, true)."</pre>";
+		echo "<pre>" . print_r($item, true) . "</pre>";
 	}
 }
 
 function buildKeyCSV($array) {
 	$notFirst = false;
 	$result = '';
-	if(is_array($array)) {
-		foreach($array as $key => $throwAway) {
-			$result .= ($notFirst) ? ', '.$key : $key;
+	if (is_array($array)) {
+		foreach ($array as $key => $throwAway) {
+			$result .= ($notFirst) ? ', ' . $key : $key;
 			$notFirst = true;
 		}
 		return $result;
@@ -191,15 +191,15 @@ function buildKeyCSV($array) {
 function consolidateArray($array, $maxVals = 10, $cullSmallest = true) {
 	$sortedArray = $array;
 
-	if(count($array) > $maxVals) {
+	if (count($array) > $maxVals) {
 		$sortSuccess = ($cullSmallest) ? arsort($sortedArray) : asort($sortedArray);
 
-		if($sortSuccess) {
+		if ($sortSuccess) {
 			$array['consolidated'] = 0;
 			$counter = 0;
-			foreach($sortedArray as $id => $value) {
+			foreach ($sortedArray as $id => $value) {
 				$counter++;
-				if($counter >= $maxVals) {
+				if ($counter >= $maxVals) {
 					$array['consolidated'] += $value;
 					unset($array[$id]);
 				}
@@ -218,9 +218,9 @@ function clearLog($logFile = 'logs/log.txt') {
 function singleLog($data, $logFile = 'logs/log.txt') {
 	$file = fopen($logFile, 'a');
 
-	if(is_array($data) || gettype($data) == 'object') $data = print_r($data, true);
+	if (is_array($data) || gettype($data) == 'object') $data = print_r($data, true);
 
-	fwrite($file, $data."\r\n");
+	fwrite($file, $data . "\r\n");
 	fclose($file);
 }
 
@@ -229,9 +229,9 @@ function columnToAlpha($num) //Converts a column number to a spreadsheet alphanu
 	$dividend = $num;
 	$result = '';
 
-	while($dividend > 0) {
+	while ($dividend > 0) {
 		$digit = ($dividend - 1) % 26;
-		$result = chr(65 + $digit).$result;
+		$result = chr(65 + $digit) . $result;
 		$dividend = (int)(($dividend - $digit) / 26);
 	}
 
@@ -245,51 +245,51 @@ function convertSmartQuotes($string) { //converts smart quotes to normal quotes.
 }
 
 function build404($request = false, $message = false, $exit = true) {
-	$htmlMessage = ($message) ? "<br /><br /><pre>".htmlspecialchars($message, ENT_QUOTES)."</pre>" : false;
-	if($request === false) {
+	$htmlMessage = ($message) ? "<br /><br /><pre>" . htmlspecialchars($message, ENT_QUOTES) . "</pre>" : false;
+	if ($request === false) {
 		global $url;
-		if(!empty($url)) $request = explode('/', $url);
+		if (!empty($url)) $request = explode('/', $url);
 	}
-	if(is_array($request)) {
-		foreach($request as $item) {
-			switch($item) {
+	if (is_array($request)) {
+		foreach ($request as $item) {
+			switch ($item) {
 				case REQUEST_TYPE_AJAX:
-					buildJSONResponse(array('success' => false, 'message' => 'Error: Could not find the function '.implode('/', $request)));
+					buildJSONResponse(array('success' => false, 'message' => 'Error: Could not find the function ' . implode('/', $request)));
 					exit;
 				case REQUEST_TYPE_MODAL:
 					include('pages/components/modalHeader.php');
-					echo '<h1>Not Found</h1><p>The requested URL /'.implode('/', $request).' was not found on this server.</p><hr><address>Apache/2.2.14 (Ubuntu) Server at customintercept.com Port 80</address>'.$htmlMessage;
+					echo '<h1>Not Found</h1><p>The requested URL /' . implode('/', $request) . ' was not found on this server.</p><hr><address>Apache/2.2.14 (Ubuntu) Server at customintercept.com Port 80</address>' . $htmlMessage;
 					include('pages/components/modalFooter.php');
 					exit;
 			}
 		}
 		header("HTTP/1.0 404 Not Found");
-		echo '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN"><html><head><title>404 Not Found</title></head><body><h1>Not Found</h1><p>The requested URL /'.implode('/', $request).' was not found on this server.</p><hr><address>Apache/2.2.14 (Ubuntu) Server at customintercept.com Port 80</address>'.$htmlMessage.'</body></html>';
-		if($exit) exit;
+		echo '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN"><html><head><title>404 Not Found</title></head><body><h1>Not Found</h1><p>The requested URL /' . implode('/', $request) . ' was not found on this server.</p><hr><address>Apache/2.2.14 (Ubuntu) Server at customintercept.com Port 80</address>' . $htmlMessage . '</body></html>';
+		if ($exit) exit;
 	} else {
 		header("HTTP/1.0 404 Not Found");
-		echo '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN"><html><head><title>404 Not Found</title></head><body><h1>Not Found</h1><p>The requested URL /'.$request.' was not found on this server.</p><hr><address>Apache/2.2.14 (Ubuntu) Server at customintercept.com Port 80</address>'.$htmlMessage.'</body></html>';
-		if($exit) exit;
+		echo '<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN"><html><head><title>404 Not Found</title></head><body><h1>Not Found</h1><p>The requested URL /' . $request . ' was not found on this server.</p><hr><address>Apache/2.2.14 (Ubuntu) Server at customintercept.com Port 80</address>' . $htmlMessage . '</body></html>';
+		if ($exit) exit;
 	}
 }
 
 function csvField($value, $textDelimiter = '"') {
-	if(strstr($value, $textDelimiter) || strstr($value, ",")) $value = $textDelimiter.str_replace($textDelimiter, $textDelimiter.$textDelimiter, $value).$textDelimiter;
+	if (strstr($value, $textDelimiter) || strstr($value, ",")) $value = $textDelimiter . str_replace($textDelimiter, $textDelimiter . $textDelimiter, $value) . $textDelimiter;
 	return $value;
 }
 
 function buildFileOption($id, $name, $path, $fileExtension = 'color', $selected = false, $default = '[none/default]') {
-	$result = "<select id='".$id."' name='".$name."'>\r\n";
+	$result = "<select id='" . $id . "' name='" . $name . "'>\r\n";
 
-	$result .= "\t<option>".htmlentities($default, ENT_QUOTES)."</option>\r\n";
+	$result .= "\t<option>" . htmlentities($default, ENT_QUOTES) . "</option>\r\n";
 
-	if($handle = opendir($path)) {
-		while(false !== ($entry = readdir($handle))) {
+	if ($handle = opendir($path)) {
+		while (false !== ($entry = readdir($handle))) {
 			$extension = explode('.', $entry);
 			$extension = (count($extension)) ? $extension[count($extension) - 1] : false;
-			if($extension == $fileExtension) {
+			if ($extension == $fileExtension) {
 				$entry = str_replace('.color', '', $entry);
-				$result .= ($entry == $selected) ? "\t<option selected='true'>".htmlentities($entry, ENT_QUOTES)."</option>\r\n" : "\t<option>".htmlentities($entry, ENT_QUOTES)."</option>\r\n";
+				$result .= ($entry == $selected) ? "\t<option selected='true'>" . htmlentities($entry, ENT_QUOTES) . "</option>\r\n" : "\t<option>" . htmlentities($entry, ENT_QUOTES) . "</option>\r\n";
 			}
 		}
 	}
@@ -301,8 +301,8 @@ function buildFileOption($id, $name, $path, $fileExtension = 'color', $selected 
 
 //Accepts single value or an array
 function toByte($value) {
-	if(is_array($value)) {
-		foreach($value as &$val) $val = toByte($val);
+	if (is_array($value)) {
+		foreach ($value as &$val) $val = toByte($val);
 		return $value;
 	} else {
 		$value = (int)$value;
@@ -317,11 +317,11 @@ function getFileExtension($fileName) {
 
 function upDownBox($id, $class = false, $startVal = 2, $interval = 1, $min = 2, $max = 50) {
 	$interval = abs($interval); //Make sure we're headed in the right direction
-	$wrapperID = 'upDown-'.$id;
+	$wrapperID = 'upDown-' . $id;
 	$result = "
-				<div id='".$wrapperID."' class='".$class." upDownBox'>
-					<input type='hidden' value='".$startVal."' id='".$id."' name='".$id."' />
-					<div class='valueBox left'>".$startVal."</div>
+				<div id='" . $wrapperID . "' class='" . $class . " upDownBox'>
+					<input type='hidden' value='" . $startVal . "' id='" . $id . "' name='" . $id . "' />
+					<div class='valueBox left'>" . $startVal . "</div>
 					<div class='upDownSelector'>
 						<div class='upButton'></div>
 						<div class='downButton'></div>
@@ -329,29 +329,29 @@ function upDownBox($id, $class = false, $startVal = 2, $interval = 1, $min = 2, 
 				</div>
 				<script type='text/javascript'>
 
-					$('#".$wrapperID." .upButton').click(function()
+					$('#" . $wrapperID . " .upButton').click(function()
 					{
-						var max = ".$max.";
-						var value = Number($('#".$id."').val());
-						var interval = ".$interval.";
+						var max = " . $max . ";
+						var value = Number($('#" . $id . "').val());
+						var interval = " . $interval . ";
 
 						if(value + interval <= max)
 						{
-							$('#".$wrapperID." input').val(value + interval).trigger('change');
-							$('#".$wrapperID." .valueBox').html(value + interval);
+							$('#" . $wrapperID . " input').val(value + interval).trigger('change');
+							$('#" . $wrapperID . " .valueBox').html(value + interval);
 						}
 					});
 
-					$('#".$wrapperID." .downButton').click(function()
+					$('#" . $wrapperID . " .downButton').click(function()
 					{
-						var min = ".$min.";
-						var value = Number($('#".$id."').val());
-						var interval = ".$interval.";
+						var min = " . $min . ";
+						var value = Number($('#" . $id . "').val());
+						var interval = " . $interval . ";
 
 						if(value - interval >= min)
 						{
-							$('#".$wrapperID." input').val(value - interval).trigger('change');
-							$('#".$wrapperID." .valueBox').html(value - interval);
+							$('#" . $wrapperID . " input').val(value - interval).trigger('change');
+							$('#" . $wrapperID . " .valueBox').html(value - interval);
 						}
 					});
 
@@ -364,19 +364,21 @@ function upDownBox($id, $class = false, $startVal = 2, $interval = 1, $min = 2, 
 
 //POST data to another script using only PHP
 function postRequest($url, $data, $optional_headers = null) {
-	if(is_array($data)) $data = http_build_query($data);
+	if (is_array($data)) $data = http_build_query($data);
 
 	$parsed = false;
 
 	parse_str($data, $parsed); //Check to see if the data parses, in case a bad string was passed.
 
-	if(is_string($data) && $parsed && is_array($parsed) && count($parsed)) {
-		$params = array('http' => array(
-			'method' => 'POST',
-			'content' => $data
-		));
+	if (is_string($data) && $parsed && is_array($parsed) && count($parsed)) {
+		$params = array(
+			'http' => array(
+				'method' => 'POST',
+				'content' => $data
+			)
+		);
 
-		if($optional_headers !== null) {
+		if ($optional_headers !== null) {
 			$params['http']['header'] = $optional_headers;
 		}
 
@@ -384,25 +386,25 @@ function postRequest($url, $data, $optional_headers = null) {
 
 		$fp = @fopen($url, 'rb', false, $ctx);
 
-		if(!$fp) {
-			throw new Exception("Problem with ".$url.", ".$php_errormsg);
+		if (!$fp) {
+			throw new Exception("Problem with " . $url . ", " . $php_errormsg);
 		}
 
 		$response = @stream_get_contents($fp);
 
-		if($response === false) {
-			throw new Exception("Problem reading data from ".$url.", ".$php_errormsg);
+		if ($response === false) {
+			throw new Exception("Problem reading data from " . $url . ", " . $php_errormsg);
 		}
 		return $response;
 	} else return false;
 }
 
 function ipIntersects($ip_one, $ip_two = false) {
-	if($ip_two === false) {
-		if($ip_one == $_SERVER['REMOTE_ADDR']) $ip = true;
+	if ($ip_two === false) {
+		if ($ip_one == $_SERVER['REMOTE_ADDR']) $ip = true;
 		else $ip = false;
 	} else {
-		if(ip2long($ip_one) <= ip2long($_SERVER['REMOTE_ADDR']) && ip2long($ip_two) >= ip2long($_SERVER['REMOTE_ADDR'])) $ip = true;
+		if (ip2long($ip_one) <= ip2long($_SERVER['REMOTE_ADDR']) && ip2long($ip_two) >= ip2long($_SERVER['REMOTE_ADDR'])) $ip = true;
 		else $ip = false;
 	}
 	return $ip;
@@ -412,16 +414,16 @@ function folderTreeArray($path) {
 	$root = scandir($path);
 	$result = array();
 
-	foreach($root as $value) {
-		if($value === '.' || $value === '..') {
+	foreach ($root as $value) {
+		if ($value === '.' || $value === '..') {
 			continue;
 		}
-		if(is_file($path.'/'.$value)) {
-			$result[] = $path.'/'.$value;
+		if (is_file($path . '/' . $value)) {
+			$result[] = $path . '/' . $value;
 			continue;
 		}
 
-		foreach(folderTreeArray($path.'/'.$value) as $folder) {
+		foreach (folderTreeArray($path . '/' . $value) as $folder) {
 			$result[] = $folder;
 		}
 	}
@@ -437,23 +439,23 @@ function folderTreeFiles($path, $file = false, $allowDupes = false) {
 
 	$fileName = false;
 
-	foreach($list as $item) {
+	foreach ($list as $item) {
 		$fileName = explode('/', $item);
 		$fileName = $fileName[count($fileName) - 1];
 
-		if($allowDupes) $result[$fileName][] = $item;
+		if ($allowDupes) $result[$fileName][] = $item;
 		else $result[$fileName] = $item;
 	}
 
-	if($fileName && $file) $result = (array_key_exists($file, $result)) ? $result[$file] : false;
+	if ($fileName && $file) $result = (array_key_exists($file, $result)) ? $result[$file] : false;
 
 	return $result;
 }
 
 function verifyArrayPattern($pattern, $test) {
-	if($pattern & is_array($pattern) && $test && is_array($test)) {
-		foreach($pattern as $key => $check) {
-			if(array_key_exists($key, $test) != $check) return false;
+	if ($pattern & is_array($pattern) && $test && is_array($test)) {
+		foreach ($pattern as $key => $check) {
+			if (array_key_exists($key, $test) != $check) return false;
 		}
 		return true;
 	} else return false;
@@ -463,27 +465,27 @@ function pathNavigationUp($pathArray) {
 	$lastItem = 0;
 	end($pathArray);
 	unset($pathArray[key($pathArray)]);
-	foreach($pathArray as &$pathItem) $pathItem = urlencode($pathItem);
-	return LINKROOT.implode('/', $pathArray);
+	foreach ($pathArray as &$pathItem) $pathItem = urlencode($pathItem);
+	return LINKROOT . implode('/', $pathArray);
 }
 
 function inline404($path) {
-	echo "<div class='bodyLabel'><h1 class='red'>404: Could not find ".htmlentities($path, ENT_QUOTES)."</h1></div>";
+	echo "<div class='bodyLabel'><h1 class='red'>404: Could not find " . htmlentities($path, ENT_QUOTES) . "</h1></div>";
 }
 
 //Requires APC: apt-get install php-apc
 function refreshMime($path) {
-	if(file_exists($path)) {
-		if(!apc_exists('MimeRefresh') || (int)apc_fetch('MimeRefresh') < (int)filemtime($path) || !apc_exists('MimeTypes')) {
+	if (file_exists($path)) {
+		if (!apc_exists('MimeRefresh') || (int)apc_fetch('MimeRefresh') < (int)filemtime($path) || !apc_exists('MimeTypes')) {
 			$types = array();
 			$file = fopen($path, 'r');
-			while(($line = fgets($file)) !== false) {
+			while (($line = fgets($file)) !== false) {
 				$line = trim(preg_replace('/#.*/', '', $line));
-				if(!$line) continue;
+				if (!$line) continue;
 				$parts = preg_split('/\s+/', $line);
-				if(count($parts) == 1) continue;
+				if (count($parts) == 1) continue;
 				$type = array_shift($parts);
-				foreach($parts as $part) $types[$part] = $type;
+				foreach ($parts as $part) $types[$part] = $type;
 			}
 			fclose($file);
 			apc_store('MimeRefresh', filemtime($path));
@@ -496,13 +498,13 @@ function refreshMime($path) {
 //Requires APC: apt-get install php-apc
 //TODO: make this accept any string, not necessarily a path to a valid file.  VERIFY THIS
 function getMimeType($fileName, $path = false) {
-	if(apc_exists('MimeTypes')) {
+	if (apc_exists('MimeTypes')) {
 		$types = apc_fetch('MimeTypes');
 		$ext = pathinfo($fileName, PATHINFO_EXTENSION);
-		if(!$ext) $ext = $fileName;
+		if (!$ext) $ext = $fileName;
 		$ext = strtolower($ext);
 		return array_key_exists($ext, $types) ? $types[$ext] : null;
-	} else if($path) { //Force refresh and try again
+	} else if ($path) { //Force refresh and try again
 		refreshMime($path);
 		return getMimeType($fileName);
 	} else return false;
@@ -527,7 +529,7 @@ function NameToURL($name, $db = false) {
 }
 
 function relevantDate($unixTime, $time = true, $seconds = true) {
-	if($unixTime) {
+	if ($unixTime) {
 		$seconds = ($time) ? $seconds : false;
 
 		$today = date('Y m W d');
@@ -538,46 +540,50 @@ function relevantDate($unixTime, $time = true, $seconds = true) {
 
 		$seconds = ($seconds) ? ':s' : '';
 
-		$time = ($time) ? ' g:i'.$seconds.' a' : '';
+		$time = ($time) ? ' g:i' . $seconds . ' a' : '';
 
 		//Today
-		if ($day == $today) $result = ($time) ? date('g:i'.$seconds.' a', $unixTime) : 'Today';
+		if ($day == $today) $result = ($time) ? date('g:i' . $seconds . ' a', $unixTime) : 'Today';
 
 		//Yesterday
 		else if (mktime(0, 0, 0, date('m'), date('d') - 1, date(date('y'))) == mktime(0, 0, 0, date('m', $unixTime), date('d', $unixTime), date(date('y', $unixTime))))
-			$result = "Yesterday".date($time, $unixTime);
+			$result = "Yesterday" . date($time, $unixTime);
 
 		//This week
 		else if (mktime(0, 0, 0, date('m'), date('d') - 6, date(date('y'))) < $unixTime && microtime(true) > $unixTime)
-			$result = ($time) ? date('D'.$time, $unixTime) : date('L'.$time, $unixTime);
+			$result = ($time) ? date('D' . $time, $unixTime) : date('L' . $time, $unixTime);
 
 		//This month
 		//else if($daySplit[0] == $todaySplit[0] && $daySplit[1] == $todaySplit[1]) $result = date('D j g:i'.$seconds.' a', $unixTime);
 
 		//This year
-		else if ($daySplit[0] == $todaySplit[0]) $result = date('D M jS g:i'.$seconds.' a', $unixTime);
-		else $result = date('Y M jS'.$time, $unixTime);
+		else if ($daySplit[0] == $todaySplit[0]) $result = date('D M jS g:i' . $seconds . ' a', $unixTime);
+		else $result = date('Y M jS' . $time, $unixTime);
 
 		return $result;
-	}
-	else return "Never";
+	} else return "Never";
 }
 
 function delTree($dir) {
 	$files = array_diff(scandir($dir), array('.', '..'));
-	foreach($files as $file) {
+	foreach ($files as $file) {
 		(is_dir("$dir/$file")) ? delTree("$dir/$file") : unlink("$dir/$file");
 	}
 	return rmdir($dir);
 }
 
-function trueInt($value) { return (bool)preg_match('/^-?([0-9])+$/', str_replace(" ", "", trim($value))); }
-function trueFloat($value) { return (bool)preg_match('/^-?([0-9])+([\.|,]([0-9])*)?$/', str_replace(" ", "", trim($value))); }
+function trueInt($value) {
+	return (bool)preg_match('/^-?([0-9])+$/', str_replace(" ", "", trim($value)));
+}
+
+function trueFloat($value) {
+	return (bool)preg_match('/^-?([0-9])+([\.|,]([0-9])*)?$/', str_replace(" ", "", trim($value)));
+}
 
 function array_hierarchy_value($array, $keys, $boolFail = false) {
 	$item = $array;
-	foreach($keys as $key) {
-		if(!array_key_exists($key, $item)) return ($boolFail) ? false : null;
+	foreach ($keys as $key) {
+		if (!array_key_exists($key, $item)) return ($boolFail) ? false : null;
 		$item = $item[$key];
 	}
 	return $item;
@@ -591,13 +597,13 @@ function preg_match_array($regex, $string) {
 
 function Display($text, $return = false) {
 	$text = htmlspecialchars($text, ENT_QUOTES);
-	if($return) return $text;
+	if ($return) return $text;
 	else echo $text;
 }
 
 function CharLimit($string, $limit = 20) {
-	if(strlen($string) > $limit) {
-		return substr($string, 0, $limit - 3).'...';
+	if (strlen($string) > $limit) {
+		return substr($string, 0, $limit - 3) . '...';
 	} else return $string;
 }
 
@@ -620,8 +626,8 @@ function StringCompare($string1, $string2, $ratio = 0.2) {
 
 	$compareLength = ($maxLength - $minLength < 4) ? $maxLength : (int)min($minLength + ($ratio * $maxLength), $maxLength);
 
-	if($string1Length > $compareLength) $string1 = substr($string1, 0, $compareLength);
-	if($string2Length > $compareLength) $string2 = substr($string2, 0, $compareLength);
+	if ($string1Length > $compareLength) $string1 = substr($string1, 0, $compareLength);
+	if ($string2Length > $compareLength) $string2 = substr($string2, 0, $compareLength);
 
 	$levenshtein = ($string1Length > $string2Length) ? levenshtein($string2, $string1) : levenshtein($string1, $string2);
 
@@ -688,18 +694,18 @@ function StringCompare($string1, $string2, $chunkLength = 4, $step = 2, $log = f
 */ //Old StringCompare() functions
 
 function ValueFromChoiceText($choices) {
-	if(!is_array($choices)) $choices = array($choices);
+	if (!is_array($choices)) $choices = array($choices);
 	$value = false;
-	foreach($choices as $choice) {
+	foreach ($choices as $choice) {
 		$match = array();
-		if(preg_match('/\A[^a-zA-Z0-9]*([0-9,]+[\.|,]?[0-9]*)/', $choice, $match) !== false) {
-			if(count($match)) {
-				if($value !== false && $value != $match[0]) return false;
+		if (preg_match('/\A[^a-zA-Z0-9]*([0-9,]+[\.|,]?[0-9]*)/', $choice, $match) !== false) {
+			if (count($match)) {
+				if ($value !== false && $value != $match[0]) return false;
 				else $value = $match[0];
 			}
 		}
 	}
-	if($value !== false) $value = str_replace(',', '', $value); //rip out commas if it's imperial numerics
+	if ($value !== false) $value = str_replace(',', '', $value); //rip out commas if it's imperial numerics
 	return $value;
 }
 
@@ -710,14 +716,19 @@ function LastArrayKey($array) {
 
 function arraykeyskeys($array) {
 	$result = array();
-	if(is_array($array)) {
-		foreach($array as $key=>$item) $result[$key] = true;
+	if (is_array($array)) {
+		foreach ($array as $key => $item) $result[$key] = true;
 	}
 	return $result;
 }
 
-function indent($count) { return str_repeat("\t", (int)$count); }
-function NiceDate($unixTime) { return date('Y M jS g:i:s a', $unixTime); }
+function indent($count) {
+	return str_repeat("\t", (int)$count);
+}
+
+function NiceDate($unixTime) {
+	return date('Y M jS g:i:s a', $unixTime);
+}
 
 class ListOfThings {
 
@@ -731,11 +742,10 @@ class ListOfThings {
 	}
 
 	public function Add($things) {
-		if(is_array($things)) {
+		if (is_array($things)) {
 			//dissociate the key
-			foreach($things as $thing) $this->Add($thing);
-		}
-		else if($things !== false) $this->things[] = $things; //Just 1 item
+			foreach ($things as $thing) $this->Add($thing);
+		} else if ($things !== false) $this->things[] = $things; //Just 1 item
 		return $this;
 	}
 
@@ -748,8 +758,8 @@ class ListOfThings {
 	}
 
 	public function SetPredicate($singular, $plural) {
-		$this->singular = ($singular) ? " ".trim($singular) : false;
-		$this->plural = ($plural) ? " ".trim($plural) : false;
+		$this->singular = ($singular) ? " " . trim($singular) : false;
+		$this->plural = ($plural) ? " " . trim($plural) : false;
 		return $this;
 	}
 
@@ -764,11 +774,10 @@ class ListOfThings {
 	}
 
 	public function Get($things = false) { //Overrides $things member if passed
-		if($things) {
+		if ($things) {
 			$clone = clone $this;
 			return $clone->Clear()->Add($things)->Get();
-		}
-		else return "$this";
+		} else return "$this";
 	}
 
 	public function Draw($things = false) {
@@ -777,25 +786,25 @@ class ListOfThings {
 
 	public function __toString() {
 		$things = $this->things; //disposable
-		switch(count($this->things)) {
+		switch (count($this->things)) {
 			case 0:
 				return $this->empty;
 
 			case 1:
-				return array_pop($things).$this->singular;
+				return array_pop($things) . $this->singular;
 
 			case 2:
-				return implode(' and ', $things).$this->plural;
+				return implode(' and ', $things) . $this->plural;
 
 			default:
 				$result = '';
-				while($thing = array_shift($things)) {
+				while ($thing = array_shift($things)) {
 					$result .= $thing;
 					$count = count($things); //Instead of counting for each if()
-					if($count == 1) $result .= ', and '; //OXFORD FTW!
-					else if($count > 1) $result .= ', ';
+					if ($count == 1) $result .= ', and '; //OXFORD FTW!
+					else if ($count > 1) $result .= ', ';
 				}
-				return $result.$this->plural;
+				return $result . $this->plural;
 		}
 	}
 }

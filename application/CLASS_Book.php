@@ -98,7 +98,7 @@ class Book {
 					break;
 
 				default:
-					
+
 					break;
 			}
 		}
@@ -133,22 +133,22 @@ class Book {
 function ValidBookArray() {
 	return array(
 		'id' => false
-	, 'userID' => false
-	, 'type' => false
-	, 'title' => false
-	, 'path' => false
-	, 'description' => false
-	, 'createStamp' => false
-	, 'modifyStamp' => false
-	, 'active' => false
+		, 'userID' => false
+		, 'type' => false
+		, 'title' => false
+		, 'path' => false
+		, 'description' => false
+		, 'createStamp' => false
+		, 'modifyStamp' => false
+		, 'active' => false
 	);
 }
 
 function NewBookArray() {
 	return array(
 		'userID' => false
-	, 'type' => false
-	, 'title' => false
-	, 'description' => false
+		, 'type' => false
+		, 'title' => false
+		, 'description' => false
 	);
 }

@@ -20,17 +20,17 @@ class SQLInsertBuilder { //This provides a streamlined method of inserting large
 
 	public function __construct($table, $vars = false) {
 		$this->table = $table;
-		if($vars) $this->addVars($vars);
+		if ($vars) $this->addVars($vars);
 	}
 
 	public function addVars($vars) {
-		if(is_array($vars)) foreach($vars as $var) $this->vars[] = $var;
+		if (is_array($vars)) foreach ($vars as $var) $this->vars[] = $var;
 		else $this->vars[] = $vars;
 		$this->status = 'Waiting for Values';
 	}
 
 	public function addValues($values) {
-		if(is_array($values)) foreach($values as $value) $this->values[] = $value;
+		if (is_array($values)) foreach ($values as $value) $this->values[] = $value;
 		else $this->values[] = $values;
 		$this->status = ($this->ready()) ? 'Ready' : 'Unmatched Vars to Values';
 	}
@@ -49,12 +49,12 @@ class SQLInsertBuilder { //This provides a streamlined method of inserting large
 
 	public function getInsertAlignment($originList) //Creates an array that aligns original keys with new keys.  ###### This needs output clarification
 	{
-		if(strpos($this->status, 'Sent') !== false && is_array($this->insertIndex)) {
-			if(is_array($originList) && count($originList) == $this->countInsertIndex()) {
+		if (strpos($this->status, 'Sent') !== false && is_array($this->insertIndex)) {
+			if (is_array($originList) && count($originList) == $this->countInsertIndex()) {
 				$result = array();
 				$counter = 0;
-				foreach($this->insertIndex as $insertIndex => $insertCount) {
-					for($i = $insertIndex; $i < $insertIndex + $insertCount; $i++) {
+				foreach ($this->insertIndex as $insertIndex => $insertCount) {
+					for ($i = $insertIndex; $i < $insertIndex + $insertCount; $i++) {
 						$result[$originList[$counter]] = $i;
 						$counter++;
 					}
@@ -65,9 +65,9 @@ class SQLInsertBuilder { //This provides a streamlined method of inserting large
 	}
 
 	public function countInsertIndex() {
-		if(is_array($this->insertIndex) && count($this->insertIndex) > 0) {
+		if (is_array($this->insertIndex) && count($this->insertIndex) > 0) {
 			$result = 0;
-			foreach($this->insertIndex as $insertCount) {
+			foreach ($this->insertIndex as $insertCount) {
 				$result += $insertCount;
 			}
 			return $result;
@@ -75,12 +75,12 @@ class SQLInsertBuilder { //This provides a streamlined method of inserting large
 	}
 
 	public function send(&$database, $rowsPerInsert = 500, $echoOutput = false) {
-		if($this->ready()) {
-			if(gettype($database) == 'object' && get_class($database) == 'MySQLDatabase') {
+		if ($this->ready()) {
+			if (gettype($database) == 'object' && get_class($database) == 'MySQLDatabase') {
 				$numRows = count($this->values) / count($this->vars);
 
-				$queryTop = "INSERT INTO ".$this->table." (";
-				foreach($this->vars as $id => $var) $queryTop .= ($id == 0) ? $var : ", ".$var;
+				$queryTop = "INSERT INTO " . $this->table . " (";
+				foreach ($this->vars as $id => $var) $queryTop .= ($id == 0) ? $var : ", " . $var;
 				$queryTop .= ") VALUES \r\n";
 
 				unset($this->insertIndex);
@@ -90,15 +90,15 @@ class SQLInsertBuilder { //This provides a streamlined method of inserting large
 				$totalInsertCounter = 0;
 				$valuesPerRow = $this->numVars();
 				$totalValueCounter = 0;
-				while($totalInsertCounter < $totalNumInserts) {
+				while ($totalInsertCounter < $totalNumInserts) {
 					$query = $queryTop;
 
 					$rowCounter = 0;
 					$currentInsertCounter = 0;
-					while($currentInsertCounter < $rowsPerInsert && $totalInsertCounter < $totalNumInserts) {
+					while ($currentInsertCounter < $rowsPerInsert && $totalInsertCounter < $totalNumInserts) {
 						$query .= ($currentInsertCounter == 0) ? "(" : ", (";
 
-						for($currentValueCounter = 0; $currentValueCounter < $valuesPerRow; $currentValueCounter++) {
+						for ($currentValueCounter = 0; $currentValueCounter < $valuesPerRow; $currentValueCounter++) {
 							$query .= ($currentValueCounter == 0) ? "" : ", ";
 							$query .= (gettype($this->values[$totalValueCounter]) == 'string' && $this->values[$totalValueCounter] != 'NULL') ? $database->Quote($this->values[$totalValueCounter]) : $this->values[$totalValueCounter];
 							$totalValueCounter++;
@@ -113,17 +113,17 @@ class SQLInsertBuilder { //This provides a streamlined method of inserting large
 
 					$insertID = $database->Query($query, true);
 
-					if($echoOutput) echo $query."\r\n\r\n";
+					if ($echoOutput) echo $query . "\r\n\r\n";
 
 					$this->successfulInserts += $database->RowsAffected();
 					$this->insertIndex[$insertID] = $database->RowsAffected(); //Log the insertID and rowsAffected for insertAlignment function
 					$this->failedInserts += ($currentInsertCounter - $database->RowsAffected());
 				}
-				$this->status = 'Sent: '.$this->successfulInserts.' successful inserts.';
+				$this->status = 'Sent: ' . $this->successfulInserts . ' successful inserts.';
 				return ($this->failedInserts) ? false : true;
 			} else {
-				$this->status = "Failed. Sent a '".gettype($database)."'";
-				$this->status .= (gettype($database) == 'object') ? " of type '".get_class($database)."'" : '.';
+				$this->status = "Failed. Sent a '" . gettype($database) . "'";
+				$this->status .= (gettype($database) == 'object') ? " of type '" . get_class($database) . "'" : '.';
 				return false;
 			}
 		} else {

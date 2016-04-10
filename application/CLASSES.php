@@ -15,17 +15,17 @@ function __autoload($className) {
 		case 'SqlFormatter':
 			include_once('thirdParty/SqlFormatter.php');
 			break;
-        case 'MySQLDatabase':
-            include_once('thirdParty/System/CLASS_MySQLDatabase.php');
-            break;
-        case 'SQLInsertBuilder':
-            include_once('thirdParty/System/CLASS_SQLSystem.php');
-            break;
+		case 'MySQLDatabase':
+			include_once('thirdParty/System/CLASS_MySQLDatabase.php');
+			break;
+		case 'SQLInsertBuilder':
+			include_once('thirdParty/System/CLASS_SQLSystem.php');
+			break;
 		case 'PerfLog':
 			include_once('thirdParty/System/CLASS_PerfLog.php');
 			break;
 		default:
-			$grenade = new Exception('Could not locate class: '.$className);
+			$grenade = new Exception('Could not locate class: ' . $className);
 			throw $grenade;
 	}
 }
