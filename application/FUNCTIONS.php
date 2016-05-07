@@ -1,5 +1,6 @@
 <?php
 
+/** @return string[] */
 function ParseHeader() {
 	$result = array();
 	prePrint(getallheaders());
@@ -19,6 +20,10 @@ const RESPONSE_404 = '404 Not Found';
 const RESPONSE_401 = '401 Not Authorized';
 const RESPONSE_400 = '400 Bad Request';
 const RESPONSE_500 = '500 Internal Error';
+/**
+ * @param string $type
+ * @param string $message
+ */
 function APIResponse($type = RESPONSE_404, $message = null) {
 	switch ($type) {
 		case RESPONSE_200:

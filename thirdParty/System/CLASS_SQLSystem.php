@@ -5,48 +5,75 @@
  */
 
 class SQLInsertBuilder { //This provides a streamlined method of inserting large volumes of data, and tracking its insert ids.
+	/** @var string */
 	private $statement = '';
+	/** @var string */
 	private $table;
+	/** @var string[] */
 	private $vars;
+	/** @var float[]|string[] */
 	private $values;
+	/** @var int */
 	public $successfulInserts = 0;
+	/** @var int */
 	public $failedInserts = 0;
 
+	/** @var int[] */
 	private $insertIndex = array(); //TODO: verify that this must be array on instantiation and not false.
 
+	/** @var int */
 	private $insertAlignment = 0;
 
+	/** @var string */
 	public $status = 'Waiting for Vars';
 
+	/**
+	 * SQLInsertBuilder constructor.
+	 * @param string $table
+	 * @param string[]|bool $vars
+	 */
 	public function __construct($table, $vars = false) {
 		$this->table = $table;
 		if ($vars) $this->addVars($vars);
 	}
 
+	/**
+	 * @param string[] $vars
+	 */
 	public function addVars($vars) {
 		if (is_array($vars)) foreach ($vars as $var) $this->vars[] = $var;
 		else $this->vars[] = $vars;
 		$this->status = 'Waiting for Values';
 	}
 
+	/**
+	 * @param float[]|string[] $values
+	 */
 	public function addValues($values) {
 		if (is_array($values)) foreach ($values as $value) $this->values[] = $value;
 		else $this->values[] = $values;
 		$this->status = ($this->ready()) ? 'Ready' : 'Unmatched Vars to Values';
 	}
 
+	/** @return bool */
 	public function ready() {
 		return (is_array($this->vars) && is_array($this->values) && $this->numValues() % $this->numVars() == 0);
 	}
 
+	/** @return int|bool */
 	public function numVars() {
 		return (is_array($this->vars)) ? count($this->vars) : false;
 	}
 
+	/** @return int|bool */
 	public function numValues() {
 		return (is_array($this->values)) ? count($this->values) : false;
 	}
 
+	/**
+	 * @return int[]|bool
+	 * @param int []
+	 */
 	public function getInsertAlignment($originList) //Creates an array that aligns original keys with new keys.  ###### This needs output clarification
 	{
 		if (strpos($this->status, 'Sent') !== false && is_array($this->insertIndex)) {
@@ -64,6 +91,7 @@ class SQLInsertBuilder { //This provides a streamlined method of inserting large
 		} else return false;
 	}
 
+	/** @return int */
 	public function countInsertIndex() {
 		if (is_array($this->insertIndex) && count($this->insertIndex) > 0) {
 			$result = 0;
@@ -74,6 +102,12 @@ class SQLInsertBuilder { //This provides a streamlined method of inserting large
 		} else return 0;
 	}
 
+	/**
+	 * @param MySQLDatabase $database
+	 * @param int $rowsPerInsert
+	 * @param bool $echoOutput
+	 * @return bool
+	 */
 	public function send(&$database, $rowsPerInsert = 500, $echoOutput = false) {
 		if ($this->ready()) {
 			if (gettype($database) == 'object' && get_class($database) == 'MySQLDatabase') {

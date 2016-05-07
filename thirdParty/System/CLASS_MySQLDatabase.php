@@ -15,33 +15,50 @@
 
 	//Example instantiation:
 	$db = new MySQLDatabase('dbCreds'); // <--pass the name of the array variable which will be globalized into the object
+
+	//This method of credential storage prevents credentials from needing to be serialized into the session,
+	//or the need for explicitly re-instantiating the connection resource with each session start.
  */
 
 const MYSQLDATABASERELATIVEPATHTOROOT = '/../../'; //Boooooo.  Because __sleep() is not called from apache context, apparently.
 const MYSQLPDODEFAULTFETCH = PDO::FETCH_ASSOC;
-const MYSQLVARPATH = '/tmp/MySQLVars/';
+const MYSQLVARPATH = '/tmp/MySQLVars/'; //Where to store any persistent declared values
 
-const MYSQLVAREXPIREDAYS = 1; //0 for off.  Use only for debugging.
+const MYSQLVAREXPIREDAYS = 1; //0 for off.  Use 0 only for debugging.
 
 const MYSQLLOGPRETTIFY = true;
 
 class MySQLDatabase {
 
+	/** @var bool|string */
 	private $credsVar = false;
+	/** @var bool|string */
 	private $uniqueID;
 
+	/** @var bool|PDO */
 	public $Conn;
+	/** @var bool|string|PDOStatement */
 	public $LastQuery = false;
+	/** @var bool|string */
 	public $LastQueryString = false;
 
+	/** @var bool */
 	private $connected = false;
+	/** @var int */
 	public $HitCount = 0; //For counting the db hits during the current web request.
+	/** @var int */
 	public $QueryTime = 0; //Stores the total amount of time communicating with the db during the current web request.
+	/** @var string */
 	public $QueryLog = '';
+	/** @var int */
+	public $QueryCount = 0;
 
+	/** @var string[] */
 	private $warmVariables = array();
+	/** @var string[] */
 	private $coldVariables = array();
 
+	/** @var bool */
 	private $logQueries = false;
 
 	public function __construct($credsVar) {
@@ -63,19 +80,26 @@ class MySQLDatabase {
 		//Only in PHP, eh?
 
 		$dsn = "mysql:dbname=" . $creds['name'] . ";host=" . $creds['host'];
-		$this->Conn = new PDO($dsn, $creds['user'], $creds['pass'],
-			array(
-				PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-				PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-				PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'
-			)
-		);
-		if ($this->Conn) {
-			$this->connected = true;
-			$this->Conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, MYSQLPDODEFAULTFETCH);
-		} else throw new Exception('Cannot connect to database.');
+		try {
+			$this->Conn = new PDO($dsn, $creds['user'], $creds['pass'],
+				array(
+					PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+					PDO::ATTR_DEFAULT_FETCH_MODE => MYSQLPDODEFAULTFETCH,
+					PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'
+				)
+			);
+		} catch (PDOException $e) { //Because credentials, yo.
+			$pomeranians = new Exception('Cannot connect to database.');
+			throw $pomeranians;
+		}
+		if ($this->Conn) $this->connected = true;
+		else {
+			$dachshunds = new Exception('Cannot connect to database.');
+			throw $dachshunds;
+		}
 	}
 
+	/** @return bool|PDOStatement */
 	public function Query($string, $returnID = false, $prettify = MYSQLLOGPRETTIFY) {
 		if (!$this->connected) $this->Connect();
 		$this->LastQueryString = $string;
@@ -113,6 +137,7 @@ class MySQLDatabase {
 		return ($returnID) ? $this->Conn->lastInsertID() : $this->LastQuery;
 	}
 
+	/** @return bool|array */
 	public function QueryToArray($query, $columnKey = false, $fetchStyle = MYSQLPDODEFAULTFETCH) {
 		$query = $this->Query($query);
 		if ($query) {
@@ -130,6 +155,7 @@ class MySQLDatabase {
 		} else return false;
 	}
 
+	/** @return array|bool */
 	public function GetRow($string, $fetchStyle = MYSQLPDODEFAULTFETCH) {
 		//LIMIT it if it isn't already
 		if (!stristr($string, ' LIMIT ')) $string = trim($string, "\r\n\t ;") . " LIMIT 1;";
@@ -138,6 +164,7 @@ class MySQLDatabase {
 		else return false;
 	}
 
+	/** @return mixed */
 	public function GetValue($string, $columnKey = false) {
 		$row = $this->GetRow($string);
 		if ($row) {
@@ -148,11 +175,13 @@ class MySQLDatabase {
 		} else return false;
 	}
 
+	/** @return string */
 	public function Quote($string) {
 		if (!$this->connected) $this->Connect();
 		return $this->Conn->quote($string);
 	}
 
+	/** @return int */
 	public function RowsAffected() {
 		if (!$this->connected) {
 			$this->Connect();
@@ -162,12 +191,14 @@ class MySQLDatabase {
 		} else return 0;
 	}
 
+	/** @return string */
 	public function BooleanNullable($value, $isCondition = false) {
 		$true = ($isCondition) ? " = " . $this->Quote($value) : $this->Quote($value);
 		$false = ($isCondition) ? ' IS NULL' : 'NULL';
 		return (trim($value)) ? $true : $false;
 	}
 
+	/** @return bool */
 	public function SetVariable($name, $value, $warm = false) {
 		//TODO: Validate for acceptable MySLQ variable characters
 		if (!file_exists(MYSQLVARPATH . $this->uniqueID)) mkdir(MYSQLVARPATH . $this->uniqueID);
@@ -178,10 +209,17 @@ class MySQLDatabase {
 		return (bool)$result;
 	}
 
+	/** @return string|bool */
+	public function GetVariable($name) {
+		return (file_exists(MYSQLVARPATH . $this->uniqueID . "/$name")) ? file_get_contents(MYSQLVARPATH . $this->uniqueID . "/$name") : false;
+	}
+
+	/** @return bool */
 	public function VariableValid($name) {
 		return file_exists(MYSQLVARPATH . $this->uniqueID . "/$name");
 	}
 
+	/** @return bool */
 	public function WarmVariable($name) {
 		if (array_key_exists($name, $this->coldVariables)) {
 			if ($this->coldVariables[$name]) return true;
@@ -196,6 +234,7 @@ class MySQLDatabase {
 		else return false;
 	}
 
+	/** @return array */
 	public function __sleep() {
 		foreach ($this->coldVariables as $name => $val) $this->coldVariables[$name] = false;
 		foreach ($this->warmVariables as $name => $val) $this->warmVariables[$name] = false;
@@ -209,13 +248,13 @@ class MySQLDatabase {
 		}
 		return array_diff(array_keys(get_object_vars($this)),
 			array( //Members excluded from session serialization
-			       'Conn',
-			       'LastQuery',
-			       'HitCount',
-			       'QueryTime',
-			       'QueryLog',
-			       'logQueries',
-			       'connected'
+			       'Conn'
+			       , 'LastQuery'
+			       , 'HitCount'
+			       , 'QueryTime'
+			       , 'QueryLog'
+			       , 'logQueries'
+			       , 'connected'
 			));
 	}
 
@@ -229,17 +268,17 @@ class MySQLDatabase {
 		//Warm the appropriate variables on wakeup.
 		$varQuery = '';
 		$warmCount = 0;
-		foreach ($this->warmVariables as $name => $var) {
-			if (file_exists(MYSQLVARPATH . $this->uniqueID . "/$name")) {
-				$this->warmVariables[$name] = true;
-				$varQuery .= "SET @" . $name . " := " . $this->Quote(file_get_contents(MYSQLVARPATH . $this->uniqueID . "/$name")) . ";";
+		foreach ($this->warmVariables as $var => $value) {
+			if (file_exists(MYSQLVARPATH . $this->uniqueID . "/$var")) {
+				$this->warmVariables[$var] = true;
+				$varQuery .= "SET @" . $var . " := " . $this->Quote(file_get_contents(MYSQLVARPATH . $this->uniqueID . "/$var")) . ";";
 				$warmCount++;
-			} else $this->warmVariables[$name] = false;
+			} else $this->warmVariables[$var] = false;
 		}
 		if ($varQuery) {
 			$start = microtime(true);
 			if (!$this->Query($varQuery)) {
-				foreach ($this->warmVariables as $name => $val) $this->warmVariables[$name] = false;
+				foreach ($this->warmVariables as $var => $val) $this->warmVariables[$var] = false;
 				$this->QueryLog .= "\tFailed to warm variables.\r\n";
 			} else $this->QueryLog .= "\tWarmed $warmCount variables in " . number_format(microtime(true) - $start, 4) . " seconds\r\n";
 		}

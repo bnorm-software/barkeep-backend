@@ -2,23 +2,39 @@
 
 class Book {
 
+	/** @var bool */
 	public $Valid = false;
 
+	/** @var int */
 	public $ID;
+	/** @var string */
 	public $Title;
 
+	/** @var string */
 	public $Type = 'Private';
+	/** @var string */
 	public $Path;
+	/** @var string|bool */
 	public $Description = false;
+	/** @var float */
 	public $CreateStamp;
+	/** @var float */
 	public $ModifyStamp;
 
+	/** @var Recipe[] */
 	public $Recipes = array();
 
+	/** @var Session */
 	public $Session;
 
+	/** @var MySQLDatabase */
 	public $DB;
 
+	/**
+	 * Book constructor.
+	 * @param Session $session
+	 * @param string[] $bookData
+	 */
 	public function __construct($session, $bookData) { //This is a comment
 		$this->Session = $session;
 		$this->DB = $session->DB;
@@ -51,6 +67,7 @@ class Book {
 		}
 	}
 
+	/** @param string[] $bookData */
 	public function Refresh($bookData) {
 		$this->ID = (int)$bookData['id'];
 		$this->Type = $bookData['type'];
@@ -62,6 +79,11 @@ class Book {
 		$this->Valid = (bool)$bookData['active'];
 	}
 
+	/**
+	 * @param string[] $server
+	 * @param string $path
+	 * @param string[] $headers
+	 */
 	public function Process($server, $path, $headers) {
 		$method = (isset($server['REQUEST_METHOD'])) ? $server['REQUEST_METHOD'] : false;
 		if (empty($path)) {
@@ -104,6 +126,7 @@ class Book {
 		}
 	}
 
+	/** @return bool */
 	public function UpdateDatabase() {
 		$queryString = "
             UPDATE tblBooks
@@ -117,6 +140,7 @@ class Book {
 		return (bool)$this->DB->Query($queryString);
 	}
 
+	/** @return string[] */
 	public function ToArray() {
 		return array(
 			'id' => (int)$this->ID
@@ -130,6 +154,7 @@ class Book {
 	}
 }
 
+/** @return string[] */
 function ValidBookArray() {
 	return array(
 		'id' => false
@@ -144,6 +169,7 @@ function ValidBookArray() {
 	);
 }
 
+/** @return string[] */
 function NewBookArray() {
 	return array(
 		'userID' => false

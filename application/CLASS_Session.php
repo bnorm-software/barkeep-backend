@@ -2,24 +2,42 @@
 
 class Session {
 
+	/** @var MySQLDatabase */
 	public $DB;
 
+	/** @var int */
 	public $ID;
 
+	/** @var string */
 	public $Username;
+	/** @var string */
 	public $DisplayName;
 
+	/** @var Book[] */
 	public $Books = array();
+	/** @var Book[] */
 	public $BooksByTitle = array();
+	/** @var Bar[] */
 	public $Bars = array();
+	/** @var Bar[] */
 	public $BarsByTitle = array();
 
+	/** @var string|bool */
 	private $auth = false;
 
+	/**
+	 * Session constructor.
+	 * @param MySQLDatabase $db
+	 */
 	public function __construct($db) {
 		$this->DB = $db;
 	}
 
+	/**
+	 * @param string[] $server
+	 * @param string $path
+	 * @param bool $perfLog
+	 */
 	public function Process($server, $path, $perfLog = false) {
 		if ($perfLog) {
 			$log = "Session Started\r\n";
@@ -136,10 +154,12 @@ class Session {
 		APIResponse(RESPONSE_400);
 	}
 
+	/** @param string[] $params */
 	private function GET($params = array()) {
 		APIResponse(RESPONSE_200, $this->ToArray());
 	}
 
+	/** @param string[] $params */
 	private function PUT($params = array()) {
 		$displayName = getParam('displayname');
 		$password = getParam('password');
@@ -159,6 +179,7 @@ class Session {
 		} else APIResponse(RESPONSE_500);
 	}
 
+	/** @return string[] */
 	public function ToArray() {
 		return array(
 			'username' => $this->Username
@@ -166,10 +187,12 @@ class Session {
 		);
 	}
 
+	/** @param string[] $params */
 	private function GET_Books($params = array()) {
 		APIResponse(RESPONSE_200, $this->bookList());
 	}
 
+	/** @return array[] */
 	private function bookList() {
 		$this->RefreshBooks();
 		$result = array();
@@ -179,7 +202,8 @@ class Session {
 		return $result;
 	}
 
-	private function POST_Books($params = false) {
+	/** @param string[] $params */
+	private function POST_Books($params = array()) {
 		$title = getParam('title');
 		$description = getParam('description');
 		if ($title) {
@@ -189,6 +213,11 @@ class Session {
 		} else APIResponse(RESPONSE_400, "Please supply a title.");
 	}
 
+	/**
+	 * @param string $title
+	 * @param string $description
+	 * @return int|bool
+	 */
 	public function CreateBook($title, $description) {
 		if ($title) {
 			$newBook = new Book($this, array(
@@ -230,10 +259,12 @@ class Session {
 		foreach ($this->Books as $book) $this->BooksByTitle[$book->Title] = $book;
 	}
 
+	/** @param string[] $params */
 	private function GET_Bars($params = array()) {
 		APIResponse(RESPONSE_200, $this->barList());
 	}
 
+	/** @return array[] */
 	private function barList() {
 		$this->RefreshBars();
 		$result = array();
@@ -243,7 +274,8 @@ class Session {
 		return $result;
 	}
 
-	private function POST_Bars($params = false) {
+	/** @param string[] $params */
+	private function POST_Bars($params = array()) {
 		$title = getParam('title');
 		$description = getParam('description');
 		if ($title) {
@@ -253,6 +285,11 @@ class Session {
 		} else APIResponse(RESPONSE_400, "Please supply a title.");
 	}
 
+	/**
+	 * @param string $title
+	 * @param string $description
+	 * @return int|bool
+	 */
 	public function CreateBar($title, $description) {
 		if ($title) {
 			$newBar = new Bar($this, array(
@@ -294,6 +331,7 @@ class Session {
 		foreach ($this->Bars as $bar) $this->BarsByTitle[$bar->Title] = $bar;
 	}
 
+	/** @return bool */
 	public function LoggedIn() {
 		if ($this->auth) {
 			$headers = getallheaders();
@@ -301,14 +339,15 @@ class Session {
 				return (bool)$this->auth;
 			else {
 				$this->auth = false;
-				APIResponse(RESPONSE_200);
+				APIResponse(RESPONSE_401);
 				exit;
 			}
 		} else return false;
 	}
 
+	/** @return int|bool */
 	public static function PasswordEntropy($password) {
 		//TODO: check password entropy here, duh.
-		return false;
+		return true;
 	}
 }
