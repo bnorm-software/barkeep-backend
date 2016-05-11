@@ -41,6 +41,9 @@ switch ($requestBase) {
 				switch ($requestVersion) {
 					case "v1":
 						$headers = getallheaders();
+						
+						$unitTest = isset($headers['Unittest']) && $headers['Unittest'] === 'true';
+						
 						if ($headers && isset($headers['Content-Type']) && $contentType = explode(';', $headers['Content-Type'])) {
 							$mime = $contentType[0];
 							switch (strtolower($mime)) {
@@ -55,11 +58,14 @@ switch ($requestBase) {
 									break;
 							}
 						}
+						
+						$dbCredentials = 'DevDBCredentials';
+						
+						if($unitTest) include('application/UnitTest/Setup.php');
 
 						session_name(SESSION_NAME);
 						session_start();
-
-						if (!isset($_SESSION['session'])) $_SESSION['session'] = new Session(new MySQLDatabase('DBCredentials'));
+						if (!isset($_SESSION['session'])) $_SESSION['session'] = new Session(new MySQLDatabase($dbCredentials));
 
 						$Session =& $_SESSION['session'];
 

@@ -99,7 +99,7 @@ class MySQLDatabase {
 		}
 	}
 
-	/** @return bool|PDOStatement */
+	/** @return PDOStatement|bool */
 	public function Query($string, $returnID = false, $prettify = MYSQLLOGPRETTIFY) {
 		if (!$this->connected) $this->Connect();
 		$this->LastQueryString = $string;

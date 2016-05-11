@@ -15,12 +15,20 @@ const SQLLOGFILE = 'logs/sql.txt';
 ////No longer using old SQL manager  It's bad, mmkay?
 //$credentials[] = new dbCredentials('localhost', 'V4', '8oN5w2MoSiFab7zuLeqa423oKavE5o', 'V4'); //primary database
 
-$DBCredentials = array(
+$DevDBCredentials = array(
 	'host' => 'localhost',
 	'name' => 'barkeep',
 	'user' => 'barkeep',
 	'pass' => 'muwiLe6EN6QA56RupELI8Il72aN8b2'
 );
+
+$UnitTestDBCredentials = array(
+	'host' => 'localhost',
+	'name' => 'barkeepUnit',
+	'user' => 'barkeep',
+	'pass' => 'muwiLe6EN6QA56RupELI8Il72aN8b2'
+);
+const UNITTESTSESSIONPATH = '/tmp/UnitPHP/';
 
 const LOGQUERIES = true;
 const QUERYLOG = 'logs/queries.txt';

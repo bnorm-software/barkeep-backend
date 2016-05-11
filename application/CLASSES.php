@@ -12,6 +12,12 @@ function __autoload($className) {
 		case 'Book':
 			include_once('application/CLASS_Book.php');
 			break;
+		case 'Bar':
+			include_once('application/CLASS_Bar.php');
+			break;
+		case 'Ingredient':
+			include_once('application/CLASS_Ingredient.php');
+			break;
 		case 'SqlFormatter':
 			include_once('thirdParty/SqlFormatter.php');
 			break;

@@ -12,8 +12,6 @@ class Book {
 
 	/** @var string */
 	public $Type = 'Private';
-	/** @var string */
-	public $Path;
 	/** @var string|bool */
 	public $Description = false;
 	/** @var float */
@@ -38,10 +36,10 @@ class Book {
 	public function __construct($session, $bookData) { //This is a comment
 		$this->Session = $session;
 		$this->DB = $session->DB;
-		if (empty(array_diff_key(ValidBookArray(), $bookData))) { //Loading an existing book
+		if (empty(array_diff_key(Book::ValidArray(), $bookData))) { //Loading an existing book
 			$this->Refresh($bookData);
 			$this->Valid = true;
-		} else if (empty(array_diff_key(NewBookArray(), $bookData))) { //Creating a new book
+		} else if (empty(array_diff_key(Book::NewArray(), $bookData))) { //Creating a new book
 
 			$this->Type = $bookData['type'];
 			$this->Title = $bookData['title'];
@@ -72,7 +70,6 @@ class Book {
 		$this->ID = (int)$bookData['id'];
 		$this->Type = $bookData['type'];
 		$this->Title = $bookData['title'];
-		$this->Path = $bookData['path'];
 		$this->Description = $bookData['description'];
 		$this->CreateStamp = (float)$bookData['createStamp'];
 		$this->ModifyStamp = (float)$bookData['modifyStamp'];
@@ -146,35 +143,31 @@ class Book {
 			'id' => (int)$this->ID
 			, 'type' => $this->Type
 			, 'title' => $this->Title
-			, 'path' => $this->Path
 			, 'description' => $this->Description
 			//, 'createStamp'=>(float)$this->CreateStamp
 			//, 'modifyStamp'=>(float)$this->ModifyStamp
 		);
 	}
-}
 
-/** @return string[] */
-function ValidBookArray() {
-	return array(
-		'id' => false
-		, 'userID' => false
-		, 'type' => false
-		, 'title' => false
-		, 'path' => false
-		, 'description' => false
-		, 'createStamp' => false
-		, 'modifyStamp' => false
-		, 'active' => false
-	);
-}
+	/** @return string[] */
+	public static function ValidArray() {
+		return array(
+			'id' => false
+			, 'type' => false
+			, 'title' => false
+			, 'description' => false
+			, 'createStamp' => false
+			, 'modifyStamp' => false
+			, 'active' => false
+		);
+	}
 
-/** @return string[] */
-function NewBookArray() {
-	return array(
-		'userID' => false
-		, 'type' => false
-		, 'title' => false
-		, 'description' => false
-	);
+	/** @return string[] */
+	public static function NewArray() {
+		return array(
+			'type' => false
+			, 'title' => false
+			, 'description' => false
+		);
+	}
 }

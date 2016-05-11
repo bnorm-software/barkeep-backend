@@ -21,6 +21,8 @@ class Session {
 	public $Bars = array();
 	/** @var Bar[] */
 	public $BarsByTitle = array();
+	/** @var Ingredient[] */
+	public $Ingredients = array();
 
 	/** @var string|bool */
 	private $auth = false;
@@ -36,7 +38,7 @@ class Session {
 	/**
 	 * @param string[] $server
 	 * @param string $path
-	 * @param bool $perfLog
+	 * @param Perflog|bool $perfLog
 	 */
 	public function Process($server, $path, $perfLog = false) {
 		if ($perfLog) {
@@ -57,7 +59,7 @@ class Session {
 							switch ($method) {
 								case "GET":
 								case "POST":
-									$handler = $method . "_books";
+									$handler = $method . "_Books";
 									if (method_exists($this, $handler)) $this->$handler();
 									else APIResponse(RESPONSE_404, "Could not find books handler $handler.");
 									break;
@@ -79,7 +81,7 @@ class Session {
 							switch ($method) {
 								case "GET":
 								case "POST":
-									$handler = $method . "_bars";
+									$handler = $method . "_Bars";
 									if (method_exists($this, $handler)) $this->$handler();
 									else APIResponse(RESPONSE_404, "Could not find bars handler $handler.");
 									break;
@@ -93,6 +95,28 @@ class Session {
 							if (!array_key_exists($barID, $this->Bars)) $this->RefreshBars();
 							if (array_key_exists($barID, $this->Bars)) $this->Bars[$barID]->Process($server, $path, $headers);
 							else APIResponse(RESPONSE_404, "Bar $barID not found.");
+						}
+						break;
+
+					case 'ingredients':
+						if (empty($path)) {
+							switch ($method) {
+								case "GET":
+								case "POST":
+									$handler = $method . "_Ingredients";
+									if (method_exists($this, $handler)) $this->$handler();
+									else APIResponse(RESPONSE_404, "Could not find ingredients handler $handler.");
+									break;
+
+								default:
+									APIResponse(RESPONSE_400, "Bad ingredient request method.");
+									break;
+							}
+						} else {
+							$ingredientID = array_shift($path);
+							if (!array_key_exists($ingredientID, $this->Ingredients)) $this->RefreshIngredients();
+							if (array_key_exists($ingredientID, $this->Ingredients)) $this->Ingredients[$ingredientID]->Process($server, $path, $headers);
+							else APIResponse(RESPONSE_404, "Ingredient $ingredientID not found.");
 						}
 						break;
 
@@ -248,8 +272,8 @@ class Session {
 					$newBook = new Book($this, $book);
 					if ($newBook->Valid) $this->Books[$book['id']] = $newBook;
 				}
-				foreach ($expiredBooks as $expiredBooksKey => $book) unset($this->Books[$expiredBooksKey]);
 			}
+			foreach ($expiredBooks as $expiredBooksKey => $book) unset($this->Books[$expiredBooksKey]);
 		}
 		$this->RefreshBooksByTitle();
 	}
@@ -320,8 +344,8 @@ class Session {
 					$newBar = new Bar($this, $bar);
 					if ($newBar->Valid) $this->Bars[$bar['id']] = $newBar;
 				}
-				foreach ($expiredBars as $expiredBarsKey => $bar) unset($this->Bars[$expiredBarsKey]);
 			}
+			foreach ($expiredBars as $expiredBarsKey => $bar) unset($this->Bars[$expiredBarsKey]);
 		}
 		$this->RefreshBarsByTitle();
 	}
@@ -329,6 +353,41 @@ class Session {
 	public function RefreshBarsByTitle() {
 		$this->BarsByTitle = array();
 		foreach ($this->Bars as $bar) $this->BarsByTitle[$bar->Title] = $bar;
+	}
+
+	private function GET_Ingredients($params = array()) {
+		if (($search = getParam('search')) !== false) {
+			//TODO: Search ingredient titles, both private and public
+		} else APIResponse(RESPONSE_400);
+	}
+
+	private function POST_Ingredients($params = array()) {
+		$title = getParam('title');
+		if ($title) {
+			$id = $this->CreateIngredient($title);
+			if ($id) APIResponse(RESPONSE_200, $this->Ingredients[$id]->ToArray());
+			else APIResponse(RESPONSE_500, "Could not create new ingredient.");
+		} else APIResponse(RESPONSE_400, "Please supply a title.");
+	}
+
+	public function CreateIngredient($title) {
+		if ($title) {
+			$newIngredient = new Ingredient($this, array(
+				'userID' => $this->ID
+				, 'title' => $title
+			));
+			if ($newIngredient->Valid) {
+				$this->Ingredients[$newIngredient->ID] = $newIngredient;
+				return $newIngredient->ID;
+			} else return false;
+		} else return false;
+	}
+
+	/**
+	 * @param int $id
+	 */
+	public function RefreshIngredients($id) {
+
 	}
 
 	/** @return bool */
