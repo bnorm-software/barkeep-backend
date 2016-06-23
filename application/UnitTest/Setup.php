@@ -30,7 +30,6 @@ if (isset($Path[0]) && $Path[0] == 'reset') {
 
 		while ($table = $tables->Fetch()) {
 			singleLog($db->Query("DROP TABLE IF EXISTS ".$table['table'].";"));
-
 		}
 
 		$db->Query("SET FOREIGN_KEY_CHECKS = 1;");

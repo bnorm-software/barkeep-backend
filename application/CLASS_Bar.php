@@ -34,7 +34,8 @@ class Bar {
 		if (empty(array_diff_key(Bar::ValidArray(), $barData))) { //Loading an existing bar
 			$this->Refresh($barData);
 			$this->Valid = true;
-		} else if (empty(array_diff_key(Bar::NewArray(), $barData))) { //Creating a new bar
+		}
+		else if (empty(array_diff_key(Bar::NewArray(), $barData))) { //Creating a new bar
 
 			$this->Type = $barData['type'];
 			$this->Title = $barData['title'];
@@ -45,10 +46,10 @@ class Bar {
                 INSERT INTO tblBars
                 (userID, type, title, description, createStamp, modifyStamp)
                 VALUES(
-                    " . (int)$this->Session->ID . "
-                    , " . $this->DB->Quote($this->Type) . "
-                    , " . $this->DB->Quote($this->Title) . "
-                    , " . $this->DB->Quote($this->Description) . "
+                    ".(int)$this->Session->ID."
+                    , ".$this->DB->Quote($this->Type)."
+                    , ".$this->DB->Quote($this->Title)."
+                    , ".$this->DB->Quote($this->Description)."
                     , $this->CreateStamp
                     , $this->ModifyStamp
                 )
@@ -88,8 +89,8 @@ class Bar {
 					break;
 
 				case 'PUT':
-					if (isset($_POST['type'])) $this->Description = $_POST['type'];
-					if (isset($_POST['title'])) $this->Description = $_POST['title'];
+					if (isset($_POST['type'])) $this->Type = $_POST['type'];
+					if (isset($_POST['title'])) $this->Title = $_POST['title'];
 					if (isset($_POST['description'])) $this->Description = $_POST['description'];
 
 					$this->UpdateDatabase();
@@ -100,13 +101,14 @@ class Bar {
 					$query = $this->DB->Query("
                         UPDATE tblBars
                         SET active = 0
-                        WHERE userID = " . (int)$this->Session->ID . "
-                            AND id = " . (int)$this->ID . " LIMIT 1;
+                        WHERE userID = ".(int)$this->Session->ID."
+                            AND id = ".(int)$this->ID." LIMIT 1;
                     ");
 					if ($query) {
 						$this->Session->RefreshBars();
 						APIResponse(RESPONSE_200);
-					} else {
+					}
+					else {
 						APIResponse(RESPONSE_500);
 					}
 					break;
@@ -123,11 +125,11 @@ class Bar {
 		$queryString = "
             UPDATE tblBars
             SET
-                `type` = " . $this->DB->Quote($this->Type) . "
-                , `title` = " . $this->DB->Quote($this->Title) . "
-                , `description` = " . $this->DB->Quote($this->Description) . "
-                , `modifyStamp` = " . microtime(true) . "
-            WHERE id = " . (int)$this->ID . " AND userID = " . (int)$this->Session->ID . "
+                `type` = ".$this->DB->Quote($this->Type)."
+                , `title` = ".$this->DB->Quote($this->Title)."
+                , `description` = ".$this->DB->Quote($this->Description)."
+                , `modifyStamp` = ".microtime(true)."
+            WHERE id = ".(int)$this->ID." AND userID = ".(int)$this->Session->ID."
         ";
 		return (bool)$this->DB->Query($queryString);
 	}
@@ -135,9 +137,9 @@ class Bar {
 	/** @return string[] */
 	public function ToArray() {
 		return array(
-			'id' => (int)$this->ID
-			, 'type' => $this->Type
-			, 'title' => $this->Title
+			'id'            => (int)$this->ID
+			, 'type'        => $this->Type
+			, 'title'       => $this->Title
 			, 'description' => $this->Description
 			//, 'createStamp'=>(float)$this->CreateStamp
 			//, 'modifyStamp'=>(float)$this->ModifyStamp
@@ -147,21 +149,21 @@ class Bar {
 	/** @return string[] */
 	public static function ValidArray() {
 		return array(
-			'id' => false
-			, 'type' => false
-			, 'title' => false
+			'id'            => false
+			, 'type'        => false
+			, 'title'       => false
 			, 'description' => false
 			, 'createStamp' => false
 			, 'modifyStamp' => false
-			, 'active' => false
+			, 'active'      => false
 		);
 	}
 
 	/** @return string[] */
 	public static function NewArray() {
 		return array(
-			'type' => false
-			, 'title' => false
+			'type'          => false
+			, 'title'       => false
 			, 'description' => false
 		);
 	}

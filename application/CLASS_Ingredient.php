@@ -23,7 +23,7 @@ class Ingredient {
 
 	/** @var MySQLDatabase */
 	public $DB;
-	
+
 	/** @var bool */
 	public $Valid = false;
 
@@ -33,7 +33,8 @@ class Ingredient {
 		if (empty(array_diff_key(Ingredient::ValidArray(), $ingredientData))) { //Loading an existing ingredient
 			$this->Refresh($ingredientData);
 			$this->Valid = true;
-		} else if (empty(array_diff_key(Ingredient::NewArray(), $ingredientData))) { //Creating a new ingredient
+		}
+		else if (empty(array_diff_key(Ingredient::NewArray(), $ingredientData))) { //Creating a new ingredient
 
 			$this->Title = $ingredientData['title'];
 
@@ -42,9 +43,9 @@ class Ingredient {
                 INSERT INTO tblIngredients
                 (userID, type, title, createStamp, modifyStamp)
                 VALUES(
-                    " . (int)$this->Session->ID . "
-                    , " . $this->DB->Quote($this->Type) . "
-                    , " . $this->DB->Quote($this->Title) . "
+                    ".(int)$this->Session->ID."
+                    , ".$this->DB->Quote($this->Type)."
+                    , ".$this->DB->Quote($this->Title)."
                     , $this->CreateStamp
                     , $this->ModifyStamp
                 )
@@ -52,6 +53,36 @@ class Ingredient {
 			if ($id) {
 				$this->ID = $id;
 				$this->Valid = true;
+			}
+		}
+	}
+	
+	public function Process($server, $path, $headers) {
+		$method = (isset($server['REQUEST_METHOD'])) ? $server['REQUEST_METHOD'] : false;
+		if (empty($path)) {
+			switch ($method) {
+				case 'POST':
+					break;
+
+				case 'GET':
+					APIResponse(RESPONSE_200, $this->ToArray());
+					break;
+
+				case 'PUT':
+					if (isset($_POST['type'])) $this->Description = $_POST['type'];
+					if (isset($_POST['title'])) $this->Description = $_POST['title'];
+
+					$this->UpdateDatabase();
+					APIResponse(RESPONSE_200, $this->ToArray());
+					break;
+
+				case 'DELETE':
+					APIResponse(RESPONSE_500, "TODO");
+					break;
+
+				default:
+
+					break;
 			}
 		}
 	}
@@ -69,9 +100,9 @@ class Ingredient {
 		$queryString = "
             UPDATE tblIngredients
             SET
-                `title` = " . $this->DB->Quote($this->Title) . "
-                , `modifyStamp` = " . microtime(true) . "
-            WHERE id = " . (int)$this->ID . " AND userID = " . (int)$this->Session->ID . "
+                `title` = ".$this->DB->Quote($this->Title)."
+                , `modifyStamp` = ".microtime(true)."
+            WHERE id = ".(int)$this->ID." AND userID = ".(int)$this->Session->ID."
         ";
 		return (bool)$this->DB->Query($queryString);
 	}
@@ -83,12 +114,12 @@ class Ingredient {
 	public function ToArray($sendBase = true) {
 		return ($sendBase && $this->BaseIngredient)
 			? array(
-				'id' => (int)$this->ID
+				'id'      => (int)$this->ID
 				, 'title' => $this->Title
-				, 'base' => $this->BaseIngredient->ToArray(false)
+				, 'base'  => $this->BaseIngredient->ToArray(false)
 			)
 			: array(
-				'id' => (int)$this->ID
+				'id'      => (int)$this->ID
 				, 'title' => $this->Title
 			);
 	}
@@ -96,8 +127,8 @@ class Ingredient {
 	/** @return string[] */
 	public static function ValidArray() {
 		return array(
-			'id' => false
-			, 'title' => false
+			'id'            => false
+			, 'title'       => false
 			, 'createStamp' => false
 			, 'modifyStamp' => false
 		);

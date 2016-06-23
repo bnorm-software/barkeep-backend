@@ -93,8 +93,8 @@ class Book {
 					break;
 
 				case 'PUT':
-					if (isset($_POST['type'])) $this->Description = $_POST['type'];
-					if (isset($_POST['title'])) $this->Description = $_POST['title'];
+					if (isset($_POST['type'])) $this->Type = $_POST['type'];
+					if (isset($_POST['title'])) $this->Title = $_POST['title'];
 					if (isset($_POST['description'])) $this->Description = $_POST['description'];
 
 					$this->UpdateDatabase();
@@ -120,6 +120,9 @@ class Book {
 
 					break;
 			}
+		}
+		else {
+			
 		}
 	}
 

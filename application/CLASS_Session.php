@@ -43,8 +43,8 @@ class Session {
 	public function Process($server, $path, $perfLog = false) {
 		if ($perfLog) {
 			$log = "Session Started\r\n";
-			$log .= "ID:            " . session_id() . "\r\n";
-			$log .= "IP Address:    " . $_SERVER['REMOTE_ADDR'] . "\r\n";
+			$log .= "ID:            ".session_id()."\r\n";
+			$log .= "IP Address:    ".$_SERVER['REMOTE_ADDR']."\r\n";
 			$perfLog->Log($log);
 		}
 
@@ -59,7 +59,7 @@ class Session {
 							switch ($method) {
 								case "GET":
 								case "POST":
-									$handler = $method . "_Books";
+									$handler = $method."_Books";
 									if (method_exists($this, $handler)) $this->$handler();
 									else APIResponse(RESPONSE_404, "Could not find books handler $handler.");
 									break;
@@ -68,7 +68,8 @@ class Session {
 									APIResponse(RESPONSE_400, "Bad book request method.");
 									break;
 							}
-						} else {
+						}
+						else {
 							$bookID = array_shift($path);
 							if (!array_key_exists($bookID, $this->Books)) $this->RefreshBooks();
 							if (array_key_exists($bookID, $this->Books)) $this->Books[$bookID]->Process($server, $path, $headers);
@@ -81,7 +82,7 @@ class Session {
 							switch ($method) {
 								case "GET":
 								case "POST":
-									$handler = $method . "_Bars";
+									$handler = $method."_Bars";
 									if (method_exists($this, $handler)) $this->$handler();
 									else APIResponse(RESPONSE_404, "Could not find bars handler $handler.");
 									break;
@@ -90,7 +91,8 @@ class Session {
 									APIResponse(RESPONSE_400, "Bad bar request method.");
 									break;
 							}
-						} else {
+						}
+						else {
 							$barID = array_shift($path);
 							if (!array_key_exists($barID, $this->Bars)) $this->RefreshBars();
 							if (array_key_exists($barID, $this->Bars)) $this->Bars[$barID]->Process($server, $path, $headers);
@@ -103,7 +105,7 @@ class Session {
 							switch ($method) {
 								case "GET":
 								case "POST":
-									$handler = $method . "_Ingredients";
+									$handler = $method."_Ingredients";
 									if (method_exists($this, $handler)) $this->$handler();
 									else APIResponse(RESPONSE_404, "Could not find ingredients handler $handler.");
 									break;
@@ -112,7 +114,8 @@ class Session {
 									APIResponse(RESPONSE_400, "Bad ingredient request method.");
 									break;
 							}
-						} else {
+						}
+						else {
 							$ingredientID = array_shift($path);
 							if (!array_key_exists($ingredientID, $this->Ingredients)) $this->RefreshIngredients();
 							if (array_key_exists($ingredientID, $this->Ingredients)) $this->Ingredients[$ingredientID]->Process($server, $path, $headers);
@@ -124,12 +127,14 @@ class Session {
 						$this->auth = false;
 						header("Clear-Authorization: true");
 						APIResponse(RESPONSE_200);
+						//TODO: Destroy the session as well.
 						break;
 
 					default:
 						break;
 				}
-			} else {
+			}
+			else {
 				switch ($method) {
 					case "GET":
 					case "PUT":
@@ -139,7 +144,8 @@ class Session {
 						break;
 				}
 			}
-		} else {
+		}
+		else {
 			if (!empty($path)) {
 				$item = array_shift($path);
 				switch ($item) {
@@ -159,15 +165,18 @@ class Session {
 								header("Set-Authorization: $this->auth");
 
 								APIResponse(RESPONSE_200, "Your name is $this->DisplayName");
-							} else APIResponse(RESPONSE_401, 'Invalid Credentials');
-						} else APIResponse(RESPONSE_401, 'No user or password given.  ' . file_get_contents('php://input'));
+							}
+							else APIResponse(RESPONSE_401, 'Invalid Credentials');
+						}
+						else APIResponse(RESPONSE_401, 'No user or password given.  '.file_get_contents('php://input'));
 						break;
 
 					default:
 						APIResponse(RESPONSE_401, 'You are not logged in.');
 						break;
 				}
-			} else {
+			}
+			else {
 				switch ($method) {
 					default:
 						APIResponse(RESPONSE_401, 'You are not logged in.');
@@ -193,20 +202,21 @@ class Session {
 				return;
 			}
 		}
-		$passwordSQL = ($password) ? ", password = " . $this->DB->Quote($password) : false;
+		$passwordSQL = ($password) ? ", password = ".$this->DB->Quote($password) : false;
 
-		$queryString = "UPDATE tblUsers SET displayName = " . $this->DB->Quote($displayName) . "$passwordSQL WHERE id = " . $this->ID . " LIMIT 1";
+		$queryString = "UPDATE tblUsers SET displayName = ".$this->DB->Quote($displayName)."$passwordSQL WHERE id = ".$this->ID." LIMIT 1";
 		$success = $this->DB->Query($queryString);
 		if ($success) {
 			$this->DisplayName = $displayName;
 			APIResponse(RESPONSE_200);
-		} else APIResponse(RESPONSE_500);
+		}
+		else APIResponse(RESPONSE_500);
 	}
 
 	/** @return string[] */
 	public function ToArray() {
 		return array(
-			'username' => $this->Username
+			'username'      => $this->Username
 			, 'displayName' => $this->DisplayName
 		);
 	}
@@ -234,7 +244,8 @@ class Session {
 			$id = $this->CreateBook($title, $description);
 			if ($id) APIResponse(RESPONSE_200, $this->Books[$id]->ToArray());
 			else APIResponse(RESPONSE_500, "Could not create new book.");
-		} else APIResponse(RESPONSE_400, "Please supply a title.");
+		}
+		else APIResponse(RESPONSE_400, "Please supply a title.");
 	}
 
 	/**
@@ -245,17 +256,19 @@ class Session {
 	public function CreateBook($title, $description) {
 		if ($title) {
 			$newBook = new Book($this, array(
-				'userID' => $this->ID
-				, 'type' => 'Private'
-				, 'title' => $title
+				'userID'        => $this->ID
+				, 'type'        => 'Private'
+				, 'title'       => $title
 				, 'description' => $description
 			));
 			if ($newBook->Valid) {
 				$this->Books[$newBook->ID] = $newBook;
 				$this->RefreshBooksByTitle();
 				return $newBook->ID;
-			} else return false;
-		} else return false;
+			}
+			else return false;
+		}
+		else return false;
 	}
 
 	public function RefreshBooks() {
@@ -268,7 +281,8 @@ class Session {
 				}
 				if (array_key_exists($book['id'], $this->Books)) {
 					$this->Books[$book['id']]->Refresh($book);
-				} else {
+				}
+				else {
 					$newBook = new Book($this, $book);
 					if ($newBook->Valid) $this->Books[$book['id']] = $newBook;
 				}
@@ -306,7 +320,8 @@ class Session {
 			$id = $this->CreateBar($title, $description);
 			if ($id) APIResponse(RESPONSE_200, $this->Bars[$id]->ToArray());
 			else APIResponse(RESPONSE_500, "Could not create new bar.");
-		} else APIResponse(RESPONSE_400, "Please supply a title.");
+		}
+		else APIResponse(RESPONSE_400, "Please supply a title.");
 	}
 
 	/**
@@ -317,17 +332,19 @@ class Session {
 	public function CreateBar($title, $description) {
 		if ($title) {
 			$newBar = new Bar($this, array(
-				'userID' => $this->ID
-				, 'type' => 'Private'
-				, 'title' => $title
+				'userID'        => $this->ID
+				, 'type'        => 'Private'
+				, 'title'       => $title
 				, 'description' => $description
 			));
 			if ($newBar->Valid) {
 				$this->Bars[$newBar->ID] = $newBar;
 				$this->RefreshBarsByTitle();
 				return $newBar->ID;
-			} else return false;
-		} else return false;
+			}
+			else return false;
+		}
+		else return false;
 	}
 
 	public function RefreshBars() {
@@ -340,7 +357,8 @@ class Session {
 				}
 				if (array_key_exists($bar['id'], $this->Bars)) {
 					$this->Bars[$bar['id']]->Refresh($bar);
-				} else {
+				}
+				else {
 					$newBar = new Bar($this, $bar);
 					if ($newBar->Valid) $this->Bars[$bar['id']] = $newBar;
 				}
@@ -356,38 +374,66 @@ class Session {
 	}
 
 	private function GET_Ingredients($params = array()) {
-		if (($search = getParam('search')) !== false) {
-			//TODO: Search ingredient titles, both private and public
-		} else APIResponse(RESPONSE_400);
+		$search = getParam('search');
+
+		//TODO: Search ingredient titles, both private and public
+
+		//Crappy Query For Testing
+		$searchString = ($search) ?  "AND title LIKE ".$this->DB->Quote("%$search%") : false;
+		$queryString = "SELECT * FROM tblIngredients WHERE userID = $this->ID $searchString LIMIT 10";
+		$query = $this->DB->Query($queryString);
+
+		$result = array();
+		if ($query) {
+			while ($row = $query->Fetch()) {
+				$ingredient = (array_key_exists($row['id'], $this->Ingredients)) ? $this->Ingredients[$row['id']] : new Ingredient($this, $row);
+				$result[$ingredient->ID] = $ingredient->ToArray();
+			}
+		}
+		APIResponse(RESPONSE_200, $result);
 	}
 
 	private function POST_Ingredients($params = array()) {
 		$title = getParam('title');
 		if ($title) {
+			//TODO: Does it already exist?  Do we care?
 			$id = $this->CreateIngredient($title);
 			if ($id) APIResponse(RESPONSE_200, $this->Ingredients[$id]->ToArray());
 			else APIResponse(RESPONSE_500, "Could not create new ingredient.");
-		} else APIResponse(RESPONSE_400, "Please supply a title.");
+		}
+		else APIResponse(RESPONSE_400, "Please supply a title.");
 	}
 
 	public function CreateIngredient($title) {
 		if ($title) {
 			$newIngredient = new Ingredient($this, array(
-				'userID' => $this->ID
+				'userID'  => $this->ID
 				, 'title' => $title
 			));
 			if ($newIngredient->Valid) {
 				$this->Ingredients[$newIngredient->ID] = $newIngredient;
 				return $newIngredient->ID;
-			} else return false;
-		} else return false;
+			}
+			else return false;
+		}
+		else return false;
 	}
 
 	/**
-	 * @param int $id
+	 * @param bool|int $id
 	 */
-	public function RefreshIngredients($id) {
-
+	public function RefreshIngredients($id = false) {
+		$result = array();
+		$condition = ($id) ? "AND tblIngredients.id = ".(int)$id : false;
+		$queryString = "SELECT * FROM tblIngredients WHERE userID = $this->ID $condition";
+		$query = $this->DB->Query($queryString);
+		if($query) {
+			while ($row = $query->Fetch()) {
+				$ingredient = (array_key_exists($row['id'], $this->Ingredients)) ? $this->Ingredients[$row['id']] : new Ingredient($this, $row);
+				$result[$ingredient->ID] = $ingredient;
+			}
+		}
+		$this->Ingredients = $result;
 	}
 
 	/** @return bool */
@@ -401,7 +447,8 @@ class Session {
 				APIResponse(RESPONSE_401);
 				exit;
 			}
-		} else return false;
+		}
+		else return false;
 	}
 
 	/** @return int|bool */
