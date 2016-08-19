@@ -436,6 +436,17 @@ class Session {
 		$this->Ingredients = $result;
 	}
 
+	/**
+	 * @param int $id
+	 * @return bool|Ingredient
+	 */
+	public function IngredientByID($id) {
+		$id = (int)$id;
+		if(!isset($this->Ingredients[$id])) $this->RefreshIngredients($id);
+		if(isset($this->Ingredients[$id])) return $this->Ingredients[$id];
+		else return false;
+	}
+
 	/** @return bool */
 	public function LoggedIn() {
 		if ($this->auth) {
