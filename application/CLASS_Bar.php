@@ -61,6 +61,8 @@ class Bar {
 		}
 	}
 
+	public function Valid() { return (bool)$this->ID; }
+
 	/** @param string[] $barData */
 	public function Refresh($barData) {
 		$this->ID = (int)$barData['id'];

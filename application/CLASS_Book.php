@@ -65,6 +65,8 @@ class Book {
 		}
 	}
 
+	public function Valid() { return (bool)$this->ID; }
+
 	/** @param string[] $bookData */
 	public function Refresh($bookData) {
 		$this->ID = (int)$bookData['id'];

@@ -28,6 +28,8 @@ const MYSQLVAREXPIREDAYS = 1; //0 for off.  Use 0 only for debugging.
 
 const MYSQLLOGPRETTIFY = true;
 
+const MYSQLAUTOCONNECT = true;
+
 class MySQLDatabase {
 
 	/** @var bool|string */
@@ -61,10 +63,14 @@ class MySQLDatabase {
 	/** @var bool */
 	private $logQueries = false;
 
+	/** @var PDOStatement */
+	private $statement = false;
+	private $statementExec = false;
+
 	public function __construct($credsVar) {
 		$this->credsVar = $credsVar;
 		$this->logQueries = defined('LOGQUERIES') && LOGQUERIES;
-		$this->uniqueID = 'sqldb-' . session_id();
+		$this->uniqueID = 'sqldb-'.session_id();
 		if (!file_exists(MYSQLVARPATH)) mkdir(MYSQLVARPATH);
 
 		MySQLDatabase::GC();
@@ -79,11 +85,11 @@ class MySQLDatabase {
 		//This prevents serializing of database credentials while allowing for multiple databases
 		//Only in PHP, eh?
 
-		$dsn = "mysql:dbname=" . $creds['name'] . ";host=" . $creds['host'];
+		$dsn = "mysql:dbname=".$creds['name'].";host=".$creds['host'];
 		try {
 			$this->Conn = new PDO($dsn, $creds['user'], $creds['pass'],
 				array(
-					PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+					PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
 					PDO::ATTR_DEFAULT_FETCH_MODE => MYSQLPDODEFAULTFETCH,
 					PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'
 				)
@@ -109,10 +115,10 @@ class MySQLDatabase {
 		$this->QueryTime += $finish;
 		$this->HitCount++;
 		if ($this->logQueries) {
-			$this->QueryLog .= "\r\nQuery #" . $this->HitCount . "  Query duration: " . number_format($finish, 4);
+			$this->QueryLog .= "\r\nQuery #".$this->HitCount."  Query duration: ".number_format($finish, 4);
 
-			if ($this->LastQuery) $this->QueryLog .= "\r\n\tRows: " . $this->LastQuery->rowCount();
-			else $this->QueryLog .= "\r\n\tError: " . implode(' - ', $this->Conn->errorInfo());
+			if ($this->LastQuery) $this->QueryLog .= "\r\n\tRows: ".$this->LastQuery->rowCount();
+			else $this->QueryLog .= "\r\n\tError: ".implode(' - ', $this->Conn->errorInfo());
 
 			$trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
 			$function = (!empty($trace)) ? $trace[0] : array();
@@ -120,10 +126,10 @@ class MySQLDatabase {
 				if (array_key_exists('class', $function) && $function['class'] == 'MySQLDatabase') continue;
 				else break;
 			}
-			$traceString = ($function && array_key_exists('class', $function)) ? $function['class'] . "::" : '';
-			$traceString .= ($function && array_key_exists('function', $function)) ? $function['function'] . '()' : '';
+			$traceString = ($function && array_key_exists('class', $function)) ? $function['class']."::" : '';
+			$traceString .= ($function && array_key_exists('function', $function)) ? $function['function'].'()' : '';
 			if (strlen($traceString)) $traceString .= "\r\n\t";
-			$traceString .= ($function && array_key_exists('file', $function)) ? $function['file'] . ':' . $function['line'] : '';
+			$traceString .= ($function && array_key_exists('file', $function)) ? $function['file'].':'.$function['line'] : '';
 			$this->QueryLog .= "\r\n\t$traceString";
 
 			if ($prettify) {
@@ -131,7 +137,7 @@ class MySQLDatabase {
 				$string = $formatter->format($string, false);
 			}
 
-			$this->QueryLog .= "\r\n\t------\r\n\t" . str_replace("\n", "\n\t", trim(str_replace("\t", ' ', $string), "\r\n")) . "\r\n\t------";
+			$this->QueryLog .= "\r\n\t------\r\n\t".str_replace("\n", "\n\t", trim(str_replace("\t", ' ', $string), "\r\n"))."\r\n\t------";
 			$this->QueryLog .= "\r\n";
 		}
 		return ($returnID) ? $this->Conn->lastInsertID() : $this->LastQuery;
@@ -148,17 +154,20 @@ class MySQLDatabase {
 					if ($found || array_key_exists($columnKey, $row)) {
 						$result[$row[$columnKey]] = $row;
 						$found = true;
-					} else $result[] = $row;
+					}
+					else $result[] = $row;
 				}
 				return $result;
-			} else return $query->fetchAll();
-		} else return false;
+			}
+			else return $query->fetchAll();
+		}
+		else return false;
 	}
 
 	/** @return array|bool */
 	public function GetRow($string, $fetchStyle = MYSQLPDODEFAULTFETCH) {
 		//LIMIT it if it isn't already
-		if (!stristr($string, ' LIMIT ')) $string = trim($string, "\r\n\t ;") . " LIMIT 1;";
+		if (!stristr($string, ' LIMIT ')) $string = trim($string, "\r\n\t ;")." LIMIT 1;";
 		$query = $this->Query($string);
 		if ($query) return $query->fetch($fetchStyle);
 		else return false;
@@ -171,8 +180,10 @@ class MySQLDatabase {
 			if ($columnKey !== false) {
 				if (array_key_exists($columnKey, $row)) return $row[$columnKey];
 				else throw new Exception("Requested column $columnKey was not found");
-			} else return array_shift($row);
-		} else return false;
+			}
+			else return array_shift($row);
+		}
+		else return false;
 	}
 
 	/** @return string */
@@ -181,19 +192,53 @@ class MySQLDatabase {
 		return $this->Conn->quote($string);
 	}
 
+	/**
+	 * @param string $statement
+	 * @param array $driver_options
+	 */
+	public function Prepare($statement, $driver_options = array()) {
+		$this->statement = $this->Conn->prepare($statement, $driver_options);
+		$this->statementExec = false;
+	}
+
+	/**
+	 * @param array $input_parameters
+	 * @return bool
+	 */
+	public function Execute($input_parameters = array()) {
+		if($this->statement) {
+			$this->statementExec = $this->statement->execute($input_parameters);
+			if($this->statementExec) {
+				$this->LastQuery = $this->statement;
+				return ($this->Conn->lastInsertId()) ? $this->Conn->lastInsertId() : true;
+			}
+			else return false;
+		}
+		else throw new PDOException("No prepared statement.");
+	}
+
+	public function Fetch() {
+		if($this->statementExec) {
+			return $this->statement->fetch();
+		}
+		else return false;
+	}
+
 	/** @return int */
 	public function RowsAffected() {
 		if (!$this->connected) {
 			$this->Connect();
 			return 0;
-		} else if ($this->LastQuery) {
+		}
+		else if ($this->LastQuery) {
 			return $this->LastQuery->rowCount();
-		} else return 0;
+		}
+		else return 0;
 	}
 
 	/** @return string */
 	public function BooleanNullable($value, $isCondition = false) {
-		$true = ($isCondition) ? " = " . $this->Quote($value) : $this->Quote($value);
+		$true = ($isCondition) ? " = ".$this->Quote($value) : $this->Quote($value);
 		$false = ($isCondition) ? ' IS NULL' : 'NULL';
 		return (trim($value)) ? $true : $false;
 	}
@@ -201,9 +246,9 @@ class MySQLDatabase {
 	/** @return bool */
 	public function SetVariable($name, $value, $warm = false) {
 		//TODO: Validate for acceptable MySLQ variable characters
-		if (!file_exists(MYSQLVARPATH . $this->uniqueID)) mkdir(MYSQLVARPATH . $this->uniqueID);
-		file_put_contents(MYSQLVARPATH . $this->uniqueID . "/$name", $value);
-		$result = $this->Query("SET @" . $name . " := " . $this->Quote($value) . ";");
+		if (!file_exists(MYSQLVARPATH.$this->uniqueID)) mkdir(MYSQLVARPATH.$this->uniqueID);
+		file_put_contents(MYSQLVARPATH.$this->uniqueID."/$name", $value);
+		$result = $this->Query("SET @".$name." := ".$this->Quote($value).";");
 		if ($warm) $this->warmVariables[$name] = true;
 		else $this->coldVariables[$name] = true;
 		return (bool)$result;
@@ -211,26 +256,28 @@ class MySQLDatabase {
 
 	/** @return string|bool */
 	public function GetVariable($name) {
-		return (file_exists(MYSQLVARPATH . $this->uniqueID . "/$name")) ? file_get_contents(MYSQLVARPATH . $this->uniqueID . "/$name") : false;
+		return (file_exists(MYSQLVARPATH.$this->uniqueID."/$name")) ? file_get_contents(MYSQLVARPATH.$this->uniqueID."/$name") : false;
 	}
 
 	/** @return bool */
 	public function VariableValid($name) {
-		return file_exists(MYSQLVARPATH . $this->uniqueID . "/$name");
+		return file_exists(MYSQLVARPATH.$this->uniqueID."/$name");
 	}
 
 	/** @return bool */
 	public function WarmVariable($name) {
 		if (array_key_exists($name, $this->coldVariables)) {
 			if ($this->coldVariables[$name]) return true;
-			else if (file_exists(MYSQLVARPATH . $this->uniqueID . "/$name")) {
+			else if (file_exists(MYSQLVARPATH.$this->uniqueID."/$name")) {
 				$start = microtime(true);
-				$this->Query("SET @" . $name . " := " . $this->Quote(file_get_contents(MYSQLVARPATH . $this->uniqueID . "/$name")) . ";");
+				$this->Query("SET @".$name." := ".$this->Quote(file_get_contents(MYSQLVARPATH.$this->uniqueID."/$name")).";");
 				$this->coldVariables[$name] = true;
-				$this->QueryLog .= "\tWarmed $name in " . number_format(microtime(true) - $start, 4) . " seconds\r\n";
+				$this->QueryLog .= "\tWarmed $name in ".number_format(microtime(true) - $start, 4)." seconds\r\n";
 				return true;
-			} else return false;
-		} else if (array_key_exists($name, $this->warmVariables)) return $this->warmVariables[$name];
+			}
+			else return false;
+		}
+		else if (array_key_exists($name, $this->warmVariables)) return $this->warmVariables[$name];
 		else return false;
 	}
 
@@ -240,10 +287,10 @@ class MySQLDatabase {
 		foreach ($this->warmVariables as $name => $val) $this->warmVariables[$name] = false;
 		if ($this->logQueries && $this->HitCount) {
 			singleLog(
-				$this->QueryLog .
-				"\r\nTotal Query Time: " . number_format($this->QueryTime, 4) .
+				$this->QueryLog.
+				"\r\nTotal Query Time: ".number_format($this->QueryTime, 4).
 				"\r\n############\r\n"
-				, dirname(__FILE__) . MYSQLDATABASERELATIVEPATHTOROOT . QUERYLOG
+				, dirname(__FILE__).MYSQLDATABASERELATIVEPATHTOROOT.QUERYLOG
 			);
 		}
 		return array_diff(array_keys(get_object_vars($this)),
@@ -255,6 +302,8 @@ class MySQLDatabase {
 			       , 'QueryLog'
 			       , 'logQueries'
 			       , 'connected'
+			       , 'statement'
+			       , 'statementExecuted'
 			));
 	}
 
@@ -262,25 +311,29 @@ class MySQLDatabase {
 		$this->logQueries = defined('LOGQUERIES') && LOGQUERIES;
 		$this->QueryCount = 0;
 		if ($this->logQueries) {
-			$this->QueryLog = "\r\n############\r\n" . date("Y-m-d H:i:s") . " - PID #" . getmypid() . "\r\n" . $_SERVER['REQUEST_URI'] . "\r\n";
+			$this->QueryLog = "\r\n############\r\n".date("Y-m-d H:i:s")." - PID #".getmypid()."\r\n".$_SERVER['REQUEST_URI']."\r\n";
 		}
+
+		if (MYSQLAUTOCONNECT) $this->Connect();
 
 		//Warm the appropriate variables on wakeup.
 		$varQuery = '';
 		$warmCount = 0;
 		foreach ($this->warmVariables as $var => $value) {
-			if (file_exists(MYSQLVARPATH . $this->uniqueID . "/$var")) {
+			if (file_exists(MYSQLVARPATH.$this->uniqueID."/$var")) {
 				$this->warmVariables[$var] = true;
-				$varQuery .= "SET @" . $var . " := " . $this->Quote(file_get_contents(MYSQLVARPATH . $this->uniqueID . "/$var")) . ";";
+				$varQuery .= "SET @".$var." := ".$this->Quote(file_get_contents(MYSQLVARPATH.$this->uniqueID."/$var")).";";
 				$warmCount++;
-			} else $this->warmVariables[$var] = false;
+			}
+			else $this->warmVariables[$var] = false;
 		}
 		if ($varQuery) {
 			$start = microtime(true);
 			if (!$this->Query($varQuery)) {
 				foreach ($this->warmVariables as $var => $val) $this->warmVariables[$var] = false;
 				$this->QueryLog .= "\tFailed to warm variables.\r\n";
-			} else $this->QueryLog .= "\tWarmed $warmCount variables in " . number_format(microtime(true) - $start, 4) . " seconds\r\n";
+			}
+			else $this->QueryLog .= "\tWarmed $warmCount variables in ".number_format(microtime(true) - $start, 4)." seconds\r\n";
 		}
 	}
 
@@ -293,8 +346,8 @@ class MySQLDatabase {
 		if (MYSQLVAREXPIREDAYS && file_exists(MYSQLVARPATH)) {
 			$expireTime = time() - (MYSQLVAREXPIREDAYS * 86400);
 			foreach (scandir(MYSQLVARPATH) as $sessionFolder) {
-				if (stristr($sessionFolder, 'sqldb-') && filemtime(MYSQLVARPATH . $sessionFolder) < $expireTime) {
-					$delete = "rm -r " . MYSQLVARPATH . $sessionFolder;
+				if (stristr($sessionFolder, 'sqldb-') && filemtime(MYSQLVARPATH.$sessionFolder) < $expireTime) {
+					$delete = "rm -r ".MYSQLVARPATH.$sessionFolder;
 					$delete = `$delete`;
 					singleLog("MySQLDatabase Garbage Collection for $sessionFolder");
 				}

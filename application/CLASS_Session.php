@@ -261,7 +261,7 @@ class Session {
 				, 'title'       => $title
 				, 'description' => $description
 			));
-			if ($newBook->Valid) {
+			if ($newBook->Valid()) {
 				$this->Books[$newBook->ID] = $newBook;
 				$this->RefreshBooksByTitle();
 				return $newBook->ID;
@@ -284,7 +284,7 @@ class Session {
 				}
 				else {
 					$newBook = new Book($this, $book);
-					if ($newBook->Valid) $this->Books[$book['id']] = $newBook;
+					if ($newBook->Valid()) $this->Books[$book['id']] = $newBook;
 				}
 			}
 			foreach ($expiredBooks as $expiredBooksKey => $book) unset($this->Books[$expiredBooksKey]);
@@ -337,7 +337,7 @@ class Session {
 				, 'title'       => $title
 				, 'description' => $description
 			));
-			if ($newBar->Valid) {
+			if ($newBar->Valid()) {
 				$this->Bars[$newBar->ID] = $newBar;
 				$this->RefreshBarsByTitle();
 				return $newBar->ID;
@@ -360,7 +360,7 @@ class Session {
 				}
 				else {
 					$newBar = new Bar($this, $bar);
-					if ($newBar->Valid) $this->Bars[$bar['id']] = $newBar;
+					if ($newBar->Valid()) $this->Bars[$bar['id']] = $newBar;
 				}
 			}
 			foreach ($expiredBars as $expiredBarsKey => $bar) unset($this->Bars[$expiredBarsKey]);
@@ -410,7 +410,7 @@ class Session {
 				'userID'  => $this->ID
 				, 'title' => $title
 			));
-			if ($newIngredient->Valid) {
+			if ($newIngredient->Valid()) {
 				$this->Ingredients[$newIngredient->ID] = $newIngredient;
 				return $newIngredient->ID;
 			}

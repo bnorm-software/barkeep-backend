@@ -29,20 +29,27 @@ class Ingredient {
 	/** @var bool */
 	public $Valid = false;
 
+	/**
+	 * Ingredient constructor.
+	 * @param Session $session
+	 * @param string[] $ingredientData
+	 */
 	public function __construct($session, $ingredientData) {
 		$this->Session = $session;
 		$this->DB = $session->DB;
-		if(isset($ingredientData['id'])) {
+		if (isset($ingredientData['id'])) {
 			$this->SetData($ingredientData);
 			$this->Valid = true;
 		}
 		else { //Creating a new ingredient
 			$this->SetData($ingredientData);
-			$this->UpdateDatabase();
-
+			$this->CreateStamp = microtime(true);
+			$this->AddToDatabase();
 		}
 	}
-	
+
+	public function Valid() { return (bool)$this->ID; }
+
 	public function Process($server, $path, $headers) {
 		$method = (isset($server['REQUEST_METHOD'])) ? $server['REQUEST_METHOD'] : false;
 		if (empty($path)) {
@@ -72,48 +79,75 @@ class Ingredient {
 		}
 	}
 
-	/** @param string[] $ingredientData */
-	public function SetData($ingredientData) {
-		if (isset($ingredientData['baseIngredientID'])) {
-			$baseIngredient = $this->Session->IngredientByID($ingredientData['baseIngredientID']);
-			if(!$baseIngredient) APIResponse(RESPONSE_400, "Update Ingredient with bad base ingredient ID.");
-			else $this->BaseIngredient = $baseIngredient;
+	/** @param string[] $data */
+	public function SetData($data) {
+		if (isset($data['baseIngredientID'])) {
+			if ($data['baseIngredientID']) {
+				$baseIngredient = $this->Session->IngredientByID($data['baseIngredientID']);
+				if (!$baseIngredient) APIResponse(RESPONSE_400, "Update Ingredient with bad base ingredient ID.");
+				else $this->BaseIngredient = $baseIngredient;
+			}
+			else $this->BaseIngredient = false;
 		}
-		if (isset($ingredientData['id'])) $this->ID = (int)$ingredientData['id'];
-		if (isset($ingredientData['title']))$this->Title = $ingredientData['title'];
-		if (isset($ingredientData['type']))$this->Type = $ingredientData['type'];
-		if (isset($ingredientData['description']))$this->Description = $ingredientData['description'];
+		if (isset($data['id'])) $this->ID = (int)$data['id'];
+		if (isset($data['title'])) $this->Title = $data['title'];
+		if (isset($data['type'])) $this->Type = $data['type'];
+		if (isset($data['description'])) $this->Description = $data['description'];
 	}
 
 	/** @return bool */
 	public function UpdateDatabase() {
-		$queryString = "
+		$this->DB->Prepare("
             UPDATE tblIngredients
             SET
-                `title` = ".$this->DB->Quote($this->Title)."
-                , `description` = ".$this->DB->Quote($this->Description)."
-                , `type` = ".$this->DB->Quote($this->Type)."
-                , `modifyStamp` = ".microtime(true)."
-            WHERE id = ".(int)$this->ID." AND userID = ".(int)$this->Session->ID."
-        ";
-		return (bool)$this->DB->Query($queryString);
+                `title` = :title
+                , `description` = :description
+                , `type` = :type
+                , `modifyStamp` = :modifyStamp
+                , `baseIngredientID` = :baseIngredientID
+            WHERE id = :id AND userID = :userID
+        ");
+
+		$success = $this->DB->Execute(array(
+			":title"              => $this->Title
+			, ":description"      => $this->Description
+			, ":type"             => $this->Type
+			, ":modifyStamp"      => microtime(true)
+			, ":baseIngredientID" => Nullable($this->BaseIngredientID())
+			, ":id"               => $this->ID
+			, ":userID"           => $this->Session->ID
+		));
+
+		return $success;
 	}
 
 	public function AddToDatabase() {
-
-		//TODO:  You know what?  Let's do a prepared statement!;
-		/*
-		$type = (isset($this->Type)) ? $this->DB->Quote($this->Type) ? 'Private';
-
-		$queryString = "
+		$this->DB->Prepare("
 			INSERT INTO tblIngredients
 				(userID, type, title, description, baseIngredientID, createStamp, modifyStamp)
-				VALUES (
-					".(int)$this->Session->ID."
-					, ".."
-				)
-		";
-		*/
+				VALUES
+				(:userID, :type, :title, :description, :baseIngredientID, :createStamp, :modifyStamp)
+		");
+		$id = $this->DB->Execute(array(
+			":userID"             => $this->Session->ID
+			, ":type"             => $this->Type
+			, ":title"            => $this->Title
+			, ":description"      => $this->Description
+			, ":baseIngredientID" => Nullable($this->BaseIngredientID())
+			, ":createStamp"      => $this->CreateStamp
+			, ":modifyStamp"      => microtime(true)
+		));
+
+		if ($id) $this->ID = $id;
+		singleLog("Created ingredient #$id");
+		return $id;
+	}
+
+	/**
+	 * @return bool|int
+	 */
+	public function BaseIngredientID() {
+		return ($this->BaseIngredient) ? $this->BaseIngredient->ID : false;
 	}
 
 	/**
@@ -121,16 +155,15 @@ class Ingredient {
 	 * @param bool $sendBase
 	 */
 	public function ToArray($sendBase = true) {
-		return ($sendBase && $this->BaseIngredient)
-			? array(
-				'id'      => (int)$this->ID
-				, 'title' => $this->Title
-				, 'base'  => $this->BaseIngredient->ToArray(false)
-			)
-			: array(
-				'id'      => (int)$this->ID
-				, 'title' => $this->Title
-			);
+		$result = array(
+			'id'            => (int)$this->ID
+			, 'title'       => $this->Title
+			, 'description' => $this->Description
+			, 'created'     => $this->CreateStamp
+			, 'modified'    => $this->ModifyStamp
+		);
+		if ($sendBase && $this->BaseIngredient) $result += array('base' => $this->BaseIngredient->ToArray(false));
+		return $result;
 	}
 
 }

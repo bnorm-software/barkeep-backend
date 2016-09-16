@@ -44,3 +44,5 @@ function APIResponse($type = RESPONSE_404, $message = null) {
 	}
 	exit;
 }
+
+function Nullable($value) { return ($value) ? $value : null; }
